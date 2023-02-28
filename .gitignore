@@ -1,4 +1,3 @@
-/build
 *~
 .DS_Store
 /*.xcodeproj/*.mode1v3
@@ -9,3 +8,10 @@
 /libOALWrapper.a
 /SimpleTest
 /Makefile
+.vscode/
+Build*/
+*.depend
+*.layout
+.directory
+*.dia~
+*.log
