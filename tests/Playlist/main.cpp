@@ -1,7 +1,7 @@
 #include "OALWrapper/OAL_Funcs.h"
 #include "OALWrapper/OAL_Stream.h"
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 
 #include <string>
 #include <cstdlib>

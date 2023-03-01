@@ -82,7 +82,7 @@ FILE *OpenFileW(const wstring& asFileName, const wstring asMode)
 #else
     string sFileName = WString2String(asFileName);
     string sMode = WString2String(asMode);
-    
+
 	FILE *fileHandle = fopen(sFileName.c_str(),sMode.c_str());
     return fileHandle;
 #endif
@@ -164,9 +164,9 @@ string OAL_GetALCErrorString( )
 //
 ///////////////////////////////////////////////////////////
 
-void ClearALErrors(const string& asFunction)
+void ClearALErrors(const string&)
 {
-	ALenum eStatus = alGetError();
+	[[maybe_unused]] ALenum eStatus = alGetError();
 	//if ( eStatus != AL_NO_ERROR )
 	//	OAL_Log(2, "%s ClearALErrors raised %d\n", asFunction.c_str(), eStatus );
 }
@@ -177,7 +177,7 @@ void ClearALErrors(const string& asFunction)
 ///////////////////////////////////////////////////////////
 
 
-bool CheckALErrors(const string& asFunc1, const string& asFunc2)
+bool CheckALErrors(const string&, const string&)
 {
 	bool bErrorOccurred = OAL_GetALError();
 	//if ( (bErrorOccured) && (cOAL_Device::IsLogEnabled()))
@@ -190,11 +190,11 @@ bool CheckALErrors(const string& asFunc1, const string& asFunc2)
 //
 ///////////////////////////////////////////////////////////
 
-void ClearALCErrors(const string& asFunction)
+void ClearALCErrors(const string&)
 {
     ALCcontext *ctx = alcGetCurrentContext();
     if (ctx == NULL) return;
-	ALCenum eStatus = alcGetError(alcGetContextsDevice(ctx));
+	[[maybe_unused]] ALCenum eStatus = alcGetError(alcGetContextsDevice(ctx));
 	//if ( eStatus != ALC_NO_ERROR )
 	//s	OAL_Log(2, "%s ClearALCErrors raised %d\n", asFunction.c_str(), eStatus );
 }
@@ -204,7 +204,7 @@ void ClearALCErrors(const string& asFunction)
 //
 ///////////////////////////////////////////////////////////
 
-bool CheckALCErrors(const string& asFunction)
+bool CheckALCErrors(const string&)
 {
 	bool bErrorOccurred = OAL_GetALCError();
 	//if ( (bErrorOccured) && (gbLogSounds) )

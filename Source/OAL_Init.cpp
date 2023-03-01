@@ -45,7 +45,7 @@ bool	OAL_Init ( cOAL_Init_Params &acParams )
 		atexit(OAL_Close);
 		return true;
 	}
-	
+
 	OAL_Close();
 	return false;
 }
@@ -98,7 +98,7 @@ void	OAL_Update ()
 //
 ///////////////////////////////////////////////////////////
 
-void	OAL_SetRollOffFactor ( const float afFactor )
+void	OAL_SetRollOffFactor ( const float )
 {
 	/*
 	DEF_FUNC_NAME("OAL_SetRollOffFactor");
@@ -134,56 +134,6 @@ void	OAL_SetDistanceModel ( eOAL_DistanceModel aeModel )
 */
 void OAL_LogSourcePoolStatus ()
 {
-/*	tvSourceListIt gpSourceListIt;
-	cOAL_Source *pSource;
-	eOALSourceStatus eStatus;
-
-	for ( gpSourceListIt = gpSourceList->begin(); gpSourceListIt != gpSourceList->end(); ++gpSourceListIt )
-	{
-        pSource = (*gpSourceListIt);
-		pSource->Lock();
-
-		eStatus = pSource->GetSourceStatus();
-		if ( (eStatus != eOALSourceStatus_Free) && (eStatus != eOALSourceStatus_FinishedPlaying) )
-		{
-			string sTemp;
-			sTemp.append(pSource->GetDebugInfo()).append("\n");					//	Updates all sources
-			/*if (pSource->mpSoundData != NULL)
-			{
-				switch(pSource->meSourceType)
-				{
-				case eOALSourceType_Sample:
-					sTemp.append(static_cast<cOAL_Sample*>(pSource->mpSoundData)->GetDebugInfo());
-					break;
-				case eOALSourceType_Stream:
-					sTemp.append(static_cast<cOAL_Stream*>(pSource->mpSoundData)->GetDebugInfo());
-					break;
-				default:
-					break;
-				}
-			}
-			else
-				sTemp.append("No soundData\n");
-			sTemp.append("\n\n");
-			OAL_Source_Log(pSource->mlId,1,sTemp.c_str());
-		}
-
-		pSource->Unlock();
-	}
-
-//	sTemp.append("\n=====================================\n================================\n\n");
-
-//	sprintf(num,"%d",glLogNum);
-	//string sFilename = string("OALSources").append(num).append(".log");
-//	string sFilename("OALSources.log");
-
-//    FILE *fLogFile = OpenFile (sFilename,"a");
-//	fwrite(sTemp.c_str(), sizeof(char), sTemp.size(), fLogFile );
-//	fclose(fLogFile);
-
-
-//	glLogNum++;
-*/
 }
 
 void OAL_SetupLogging ( bool abLogSounds, eOAL_LogOutput aeOutput, eOAL_LogVerbose aeVerboseLevel, string asLogFilename )
@@ -242,7 +192,7 @@ void OAL_Log ( eOAL_LogVerbose aeVerboseLevelReq, eOAL_LogMsg aeMessageType,  co
 	vsprintf(text, asMessage, ap);
 	va_end(ap);
 
-	
+
 	switch ( aeMessageType )
 	{
 	case eOAL_LogMsg_Command:
@@ -271,12 +221,13 @@ const char* OAL_Info_GetDeviceName()
 }
 
 const char* OAL_Info_GetVendorName()
-{	
+{
 	if (gpDevice)
 		return gpDevice->GetVendorName().c_str();
 	else
 		return NULL;
 }
+
 const char* OAL_Info_GetRendererName()
 {
 	if (gpDevice)
@@ -284,14 +235,16 @@ const char* OAL_Info_GetRendererName()
 	else
 		return NULL;
 }
-const int		OAL_Info_GetMajorVersion()
+
+int		OAL_Info_GetMajorVersion()
 {
 	if (gpDevice)
 		return gpDevice->GetMajorVersion();
 	else
 		return 0;
 }
-const int		OAL_Info_GetMinorVersion()
+
+int		OAL_Info_GetMinorVersion()
 {
 	if (gpDevice)
 		return gpDevice->GetMinorVersion();
@@ -299,7 +252,7 @@ const int		OAL_Info_GetMinorVersion()
 		return 0;
 }
 
-const int	OAL_Info_GetNumSources()
+int	OAL_Info_GetNumSources()
 {
 	if (gpDevice)
 		return gpDevice->GetNumSources();
@@ -307,7 +260,7 @@ const int	OAL_Info_GetNumSources()
 		return 0;
 }
 
-const bool	OAL_Info_IsEFXActive()
+bool	OAL_Info_IsEFXActive()
 {
 	if (gpDevice)
 		return gpDevice->IsEFXActive();

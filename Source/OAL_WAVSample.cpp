@@ -10,7 +10,7 @@
 	@author Luis Rodero
 	@date 2006-10-02
 	@version 0.1
-	Derived class for containing WAV Sample data 
+	Derived class for containing WAV Sample data
 */
 
 #include "OALWrapper/OAL_WAVSample.h"
@@ -43,7 +43,7 @@ bool cOAL_WAVSample::CreateFromFile(const wstring &asFilename)
 	fseek(fileHandle, 0, SEEK_SET);
 
 	void *buffer = malloc(pos);
-	
+
 	fread(buffer, pos, 1, fileHandle);
 	fclose(fileHandle);
 	bool result = CreateFromBuffer(buffer, pos);
@@ -133,13 +133,13 @@ bool cOAL_WAVSample::CreateFromBuffer(const void* apBuffer, size_t aSize)
 	{
 		return false;
 	}
-	
+
 	ptr = find_chunk(ptr, end, "fmt ");
 	if (!ptr) {
 		return false;
 	}
 	readStruct(wave_format, ptr);
-	
+
 	if (wave_format.audioFormat != 1) {
 		return false;
 	}
@@ -152,7 +152,7 @@ bool cOAL_WAVSample::CreateFromBuffer(const void* apBuffer, size_t aSize)
 	const char* base = readStruct(wave_data, ptr);
 
 	size_t size = wave_data.subChunkSize;
-	if (size > (end - base)) {
+	if (size > static_cast<size_t>(end - base)) {
 		return false;
 	}
 
@@ -184,7 +184,7 @@ bool cOAL_WAVSample::CreateFromBuffer(const void* apBuffer, size_t aSize)
 	}
 	mlFrequency = wave_format.sampleRate;
 	mfTotalTime = float(mlSamples) / float(mlFrequency);
-	
+
 	cOAL_Buffer* pBuffer = mvBuffers[0];
 	mbStatus = pBuffer->Feed((ALvoid*)base, size);
 

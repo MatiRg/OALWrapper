@@ -39,12 +39,12 @@ int main (int argc, char *argv[])
 	}
 	else if (argc <= 2)
 	{
-		strFilename.assign(argv[1]);
+		strFilename = argv[1];
 	} else {
 		if (string(argv[1]) == "memory") {
 			useMemory = true;
 		}
-		strFilename.assign(argv[2]);
+		strFilename = argv[2];
 	}
 
 	cOAL_Sample *pSample = NULL;
