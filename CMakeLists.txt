@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.20)
 project(OALWrapper CXX)
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
@@ -80,17 +80,17 @@ set(SOURCES_FULL
 )
 
 add_library(OALWrapper STATIC ${SOURCES_FULL})
-
+#
 set(INC_BASE Include)
-
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     message(STATUS "Windows system")
+
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 		set(WIN_PATH_LIBS ThirdParty/Win64-MSVC)
 	elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
 		set(WIN_PATH_LIBS ThirdParty/Win64-MinGW)
 	endif()
-    link_directories(${WIN_PATH_LIBS}/lib)
+    target_link_directories(OALWrapper PUBLIC ${WIN_PATH_LIBS}/lib)
 	
 	set(INC_BASE ${INC_BASE} ${WIN_PATH_LIBS}/include)
 	
@@ -103,9 +103,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	endif()
 	
 	file(GLOB WIN_DLL_LIB "${WIN_PATH_LIBS}/bin/*.dll")
-    add_custom_target(copy-dll-files ALL
-        COMMAND cmake -E copy ${WIN_DLL_LIB} ${CMAKE_BINARY_DIR}
-        DEPENDS ${MY_TARGET})
+    add_custom_target(copy-dll-files ALL COMMAND cmake -E copy ${WIN_DLL_LIB} ${CMAKE_BINARY_DIR})
 elseif(CMAKE_SYSTEM_NAME MATCHES "Linux") # TO DO
 	message(STATUS "Linux system")
 
@@ -114,33 +112,24 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux") # TO DO
 else()
 	message(FATAL_ERROR "Unknown System.")
 endif()
-
 target_include_directories(OALWrapper PUBLIC ${INC_BASE})
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
-	set(CMP_GNU -Wall -Wextra -Wunreachable-code -Wpedantic -Wshadow -Wnon-virtual-dtor -Wno-cast-function-type)
-	set(CMP_OPT ${CMP_GNU})
+target_link_libraries(OALWrapper PUBLIC ${LIBS})
+#
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+	set(CMP_OPT -Wall -Wextra -Wunreachable-code -Wpedantic -Wshadow -Wnon-virtual-dtor -Wno-cast-function-type)
 endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-	set(CMP_CLN -Wall -Wextra -Wunreachable-code -Wpedantic -Wweak-vtables -Wexit-time-destructors -Wglobal-constructors -Wmissing-noreturn)
-	set(CMP_OPT ${CMP_CLN})
+	set(CMP_OPT -Wall -Wextra -Wunreachable-code -Wpedantic -Wweak-vtables -Wexit-time-destructors -Wglobal-constructors -Wmissing-noreturn)
 endif()
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-	set(CMP_MSV /W4 /w44265 /w44062 /wd4201 /wd4458 /wd4996 /wd4244 /wd4061 /wd4456 /wd4457 /wd4701 /wd4267 /wd4245 /wd4100)
-	set(CMP_OPT ${CMP_MSV})
+	set(CMP_OPT /W4 /w44265 /w44062 /wd4201 /wd4458 /wd4996 /wd4244 /wd4061 /wd4456 /wd4457 /wd4701 /wd4267 /wd4245 /wd4100)
 endif()
-
-target_link_libraries(OALWrapper ${LIBS})
-target_compile_options(OALWrapper PRIVATE ${CMP_OPT})
+target_compile_options(OALWrapper PUBLIC ${CMP_OPT})
 
 if(BUILD_SAMPLES)
     add_executable(HelloSound Tests/Hello/main.cpp)
-    target_include_directories(HelloSound PUBLIC ${INC_BASE})
-    target_link_libraries(HelloSound ${LIBS} OALWrapper)
-	target_compile_options(HelloSound PRIVATE ${CMP_OPT})
+    target_link_libraries(HelloSound PUBLIC OALWrapper)
     #
     add_executable(PlaySound Tests/PlaySound/main.cpp)
-    target_include_directories(PlaySound PUBLIC ${INC_BASE})
-    target_link_libraries(PlaySound ${LIBS} OALWrapper)
-	target_compile_options(PlaySound PRIVATE ${CMP_OPT})
+    target_link_libraries(PlaySound PUBLIC OALWrapper)
 endif()
