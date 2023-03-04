@@ -150,10 +150,6 @@ public:
 
 	// Special
 	void IncRefCount();
-	// Logging
-	//void LogMsg("",eOAL_LogVerbose aeVerboseLevelReq, eOAL_LogMsg aeMessageType, const char* asMessage, ...);
-
-
 private:
 	friend class cOAL_Stream;
 

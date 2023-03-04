@@ -351,7 +351,6 @@ void cOAL_Source::LowLevelSetMuted( bool abX )
 
 	if(IsValidObject()==false)
 	{
-		//OAL_Source_Log(mlId,2,"Invalid source name:%d\n", mlSource);
 		return;
 	}
 	if(abX)
@@ -415,9 +414,7 @@ int	cOAL_Source::BindData(cOAL_Sample *apSample)
 {
 	Stop();
 
-	if(apSample==NULL ||
-		apSample->GetStatus()==false)
-		return -1;
+	if(apSample==NULL || apSample->GetStatus()==false) return -1;
 
 	mbNeedsReset = true;
 
@@ -427,8 +424,6 @@ int	cOAL_Source::BindData(cOAL_Sample *apSample)
 
 	mpAudioData->AddBoundSource(this);
 	IncRefCount();
-
-	//LogMsg("",eOAL_LogVerbose_High,eOAL_LogMsg_Info, "Sample %s attached\n", mpAudioData->GetFilename().c_str());
 
 	return GetPackedHandle(mlRefCount, mlId);
 }
@@ -908,49 +903,3 @@ void cOAL_Source::UpdateFiltering()
 {
 	SetFilterEnabled(true, 0x3);
 }
-
-//--------------------------------------------------------------------------------
-/*
-void cOAL_Source::Log( eOAL_LogVerbose aVerboseLevelReq, eOAL_LogMsg aMessageType, const char* asMessage, ...)
-{
-	if(asMessage == NULL)
-		return;
-	if(!mbLogEnabled)
-		return;
-
-	if(aVerboseLevelReq < mLogVerboseLevel)
-		return;
-
-	string sMessage;
-
-	char text[2048];
-	va_list ap;
-	va_start(ap, asMessage);
-	vsprintf(text, asMessage, ap);
-	va_end(ap);
-	char sourceId[20];
-
-	sprintf(sourceId, "Source no. %d - ",mlId);
-
-
-	switch(aMessageType)
-	{
-	case eOAL_LogMsg_Command:
-		sMessage.append("[COMMAND] ");
-		break;
-	case eOAL_LogMsg_Info:
-		sMessage.append("[INFO] ");
-		break;
-	case eOAL_LogMsg_Error:
-		sMessage.append("[ERROR] ");
-	default:
-		break;
-	}
-
-	sMessage.append(sourceId).append(text);
-
-	Write(sMessage);
-}
-*/
-//--------------------------------------------------------------------------------
-

@@ -124,15 +124,13 @@ void	OAL_SetDistanceModel ( eOAL_DistanceModel aeModel )
 }
 
 
-
-
 ///////////////////////////////////////////////////////////
 //
 //
 ///////////////////////////////////////////////////////////
 /*
 */
-void OAL_LogSourcePoolStatus ()
+void OAL_LogSourcePoolStatus()
 {
 }
 
@@ -142,36 +140,6 @@ void OAL_SetupLogging ( bool abLogSounds, eOAL_LogOutput aeOutput, eOAL_LogVerbo
 	iOAL_LoggerObject::SetLogOutput ( aeOutput );
 	iOAL_LoggerObject::SetLogVerbose( aeVerboseLevel );
 	iOAL_LoggerObject::SetLogFilename( asLogFilename );
-
-	FILE* pTempFile = OpenFileW(iOAL_LoggerObject::GetLogFilename(), L"a");
-
-	if (pTempFile)
-	{
-		fclose(pTempFile);
-#ifdef WIN32
-		_wremove (iOAL_LoggerObject::GetLogFilename().c_str());
-#else
-		remove (WString2String(iOAL_LoggerObject::GetLogFilename()).c_str());
-#endif
-	}
-
-	pTempFile = NULL;
-/*
-	for (int i = 0; i < 4096; ++i)
-	{
-		char buffer[100];
-
-		sprintf(buffer, "./OAL/OAL_Source_%d.log", i);
-		pTempFile = OpenFile(string(buffer),"r");
-		if (pTempFile)
-		{
-			fclose(pTempFile);
-			remove(buffer);
-		}
-		else
-			break;
-	}
-*/
 }
 
 void OAL_Log ( eOAL_LogVerbose aeVerboseLevelReq, eOAL_LogMsg aeMessageType,  const char* asMessage, ... )

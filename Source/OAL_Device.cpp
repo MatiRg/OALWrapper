@@ -438,7 +438,6 @@ cOAL_Stream* cOAL_Device::LoadStream(const wstring &asFilename, eOAL_SampleForma
 	if(pStream->CreateFromFile(asFilename))
 	{
 		mlstStreams.push_back(pStream);
-		//hpl::Log("Loaded stream %s\n", pStream->msName.c_str());
 	}
 	else
 	{
@@ -675,19 +674,22 @@ vector<string> cOAL_Device::GetOutputDevices()
 	vector<string> devices;
 	bool bEnumerate = RUN_ALC_FUNC(alcIsExtensionPresent(NULL, (const ALCchar*)"ALC_ENUMERATION_EXT") == AL_TRUE);
 	bool bEnumerate_all = RUN_ALC_FUNC(alcIsExtensionPresent(NULL, (const ALCchar*)"ALC_ENUMERATE_ALL_EXT") == AL_TRUE);
-	if (bEnumerate) {
+	if (bEnumerate) 
+	{
 		const char *s;
-		if (bEnumerate_all) {
+		if (bEnumerate_all) 
+		{
 			// walk devices
 			s = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
-		} else {
+		} else 
+		{
 			s = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
 		}
-		while (*s != '\0') {
+		while (*s != '\0') 
+		{
 			devices.push_back(string(s));
 			// find next string
-			while (*s++ != '\0')
-				;
+			while (*s++ != '\0');
 		}
 	}
 	return devices;
@@ -729,49 +731,3 @@ void cOAL_Device::SetDistanceModel(eOAL_DistanceModel aModel)
 
 	RUN_AL_FUNC(alDistanceModel(distModel));
 }
-
-//-------------------------------------------------------------------------
-
-/////////////////////////////////////////////////////////////////
-
-//-------------------------------------------------------------------------
-/*
-void cOAL_Device::Log( eOAL_LogVerbose aVerboseLevelReq, eOAL_LogMsg aMessageType, const char* asMessage, ...)
-{
-	if(asMessage == NULL)
-		return;
-	if(!mbLogEnabled)
-		return;
-
-	if(aVerboseLevelReq > mLogVerboseLevel)
-		return;
-
-	string sMessage;
-
-	char text[2048];
-	va_list ap;
-	va_start(ap, asMessage);
-	vsprintf(text, asMessage, ap);
-	va_end(ap);
-
-
-	switch(aMessageType)
-	{
-	case eOAL_LogMsg_Command:
-		sMessage.append("[COMMAND] ");
-		break;
-	case eOAL_LogMsg_Info:
-		sMessage.append("[INFO] ");
-		break;
-	case eOAL_LogMsg_Error:
-		sMessage.append("[ERROR] ");
-	default:
-		break;
-	}
-
-	sMessage.append("Device - ").append(text);
-
-	Write(sMessage);
-}
-*/
-//-------------------------------------------------------------------------
