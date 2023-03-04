@@ -31,7 +31,7 @@
 
 //------------------------------------------------------------------
 
-cOAL_Buffer::cOAL_Buffer(iOAL_AudioData* apParent) : iOAL_LowLevelObject("Buffer")
+cOAL_Buffer::cOAL_Buffer(iOAL_AudioData* apParent)
 {
 	CreateLowLevelID();
 	mpParent = apParent;

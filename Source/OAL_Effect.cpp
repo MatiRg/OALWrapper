@@ -10,9 +10,9 @@
 
 #include <SDL2/SDL_mutex.h>
 
-cOAL_Effect::cOAL_Effect() : iOAL_LowLevelObject("Effect"),
+cOAL_Effect::cOAL_Effect():
 							 mbNeedsUpdate(true), 
-							 mpMutex(NULL)
+							 mpMutex(nullptr)
 {
 	mbStatus = CreateLowLevelID();
 }

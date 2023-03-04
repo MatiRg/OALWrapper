@@ -6,63 +6,56 @@
  * For conditions of distribution and use, see copyright notice in LICENSE
  */
 /**
-	@file OAL_Device.cpp
-	@author Luis Rodero
-	@date 2006-10-27
-	@version 0.1
-	Implementation of the cOAL_Device class
+    @file OAL_Device.cpp
+    @author Luis Rodero
+    @date 2006-10-27
+    @version 0.1
+    Implementation of the cOAL_Device class
 */
-
 #include "OALWrapper/OAL_Device.h"
-#include "OALWrapper/OAL_Source.h"
-#include "OALWrapper/OAL_OggSample.h"
-#include "OALWrapper/OAL_WAVSample.h"
-#include "OALWrapper/OAL_OggStream.h"
 #include "OALWrapper/OAL_CustomStream.h"
-#include "OALWrapper/OAL_SourceManager.h"
-
-#include "OALWrapper/OAL_Filter.h"
 #include "OALWrapper/OAL_Effect_Reverb.h"
-
+#include "OALWrapper/OAL_Filter.h"
+#include "OALWrapper/OAL_OggSample.h"
+#include "OALWrapper/OAL_OggStream.h"
+#include "OALWrapper/OAL_Source.h"
+#include "OALWrapper/OAL_SourceManager.h"
+#include "OALWrapper/OAL_WAVSample.h"
 #include <cstring>
-
-using namespace std;
 
 //-------------------------------------------------------------------------
 
 //////////////////////////////////////////////
 // Human readable extension names
-
-string sExtensionNames[NUM_EXTENSIONS+1] =
-{
-	string("ALC_EXT_CAPTURE" ),
-	string("ALC_EXT_EFX"),
-	string("ALC_ENUMERATION_EXT"),
-	string("ALC_ENUMERATE_ALL_EXT"),
-	string("AL_EXT_OFFSET"),
-	string("AL_EXT_LINEAR_DISTANCE"),
-	string("AL_EXT_EXPONENT_DISTANCE"),
-	string("EAX"),
-	string("EAX2.0"),
-	string("EAX3.0"),
-	string("EAX4.0"),
-	string("EAX5.0"),
-	string("EAX-RAM"),
-	string("No extension")
-};
+std::string sExtensionNames[NUM_EXTENSIONS + 1] =
+    {
+        std::string("ALC_EXT_CAPTURE"),
+        std::string("ALC_EXT_EFX"),
+        std::string("ALC_ENUMERATION_EXT"),
+        std::string("ALC_ENUMERATE_ALL_EXT"),
+        std::string("AL_EXT_OFFSET"),
+        std::string("AL_EXT_LINEAR_DISTANCE"),
+        std::string("AL_EXT_EXPONENT_DISTANCE"),
+        std::string("EAX"),
+        std::string("EAX2.0"),
+        std::string("EAX3.0"),
+        std::string("EAX4.0"),
+        std::string("EAX5.0"),
+        std::string("EAX-RAM"),
+        std::string("No extension")};
 
 //-------------------------------------------------------------------------
 
-cOAL_Device::cOAL_Device ( ) : mpDevice(NULL),
-							   mpContext(NULL),
-							   mpSourceManager(NULL),
-							   mpEFXManager(NULL),
-							   mbEFXActive(false),
-							   mlEFXSends(0)
+cOAL_Device::cOAL_Device() : mpDevice(nullptr),
+                             mpContext(nullptr),
+                             mpSourceManager(nullptr),
+                             mpEFXManager(nullptr),
+                             mbEFXActive(false),
+                             mlEFXSends(0)
 {
 }
 
-cOAL_Device::~cOAL_Device ()
+cOAL_Device::~cOAL_Device()
 {
 }
 
@@ -74,150 +67,147 @@ cOAL_Device::~cOAL_Device ()
 
 //-------------------------------------------------------------------------
 
-bool cOAL_Device::Init( cOAL_Init_Params& acParams )
+bool cOAL_Device::Init(cOAL_Init_Params& acParams)
 {
-	DEF_FUNC_NAME(cOAL_Device::Init);
+    DEF_FUNC_NAME(cOAL_Device::Init);
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Command, "Initializing device: %s...\n", (acParams.msDeviceName == "")? "\"preferred\"":acParams.msDeviceName.c_str() );
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Command, "Initializing device: %s...\n", (acParams.msDeviceName == "") ? "\"preferred\"" : acParams.msDeviceName.c_str());
 
-	LogMsg("",eOAL_LogVerbose_High, eOAL_LogMsg_Info, "Configuring streaming options:\n");
+    LogMsg("", eOAL_LogVerbose_High, eOAL_LogMsg_Info, "Configuring streaming options:\n");
 
-	cOAL_Stream::SetBufferSize(acParams.mlStreamingBufferSize);
-	LogMsg("",eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\tSetting buffer size to %d bytes\n",cOAL_Stream::GetBufferSize());
-	cOAL_Stream::SetBufferCount(acParams.mlStreamingBufferCount);
-	LogMsg("",eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\tSetting queue length to %d buffers\n",cOAL_Stream::GetBufferCount());
+    cOAL_Stream::SetBufferSize(acParams.mlStreamingBufferSize);
+    LogMsg("", eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\tSetting buffer size to %d bytes\n", cOAL_Stream::GetBufferSize());
+    cOAL_Stream::SetBufferCount(acParams.mlStreamingBufferCount);
+    LogMsg("", eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\tSetting queue length to %d buffers\n", cOAL_Stream::GetBufferCount());
 
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Attempting to open device...\n");
+    // Open the device, if fails return false
+    if (acParams.msDeviceName.empty())
+        mpDevice = alcOpenDevice(nullptr);
+    else
+        mpDevice = alcOpenDevice(acParams.msDeviceName.c_str());
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Attempting to open device...\n" );
-	// Open the device, if fails return false
-	if(acParams.msDeviceName.empty())
-		mpDevice = alcOpenDevice(NULL);
-	else
-		mpDevice = alcOpenDevice( acParams.msDeviceName.c_str() );
+    if (mpDevice == nullptr)
+    {
+        LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Error, "Error opening device\n");
+        return false;
+    }
 
-	if(mpDevice == NULL)
-	{
-		LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Error, "Error opening device\n" );
-		return false;
-	}
+    FUNC_USES_ALC;
 
-	FUNC_USES_ALC;
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Success.\n");
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Success.\n" );
+    // Get ALC extensions ( ie EFX )
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Checking present ALC extensions\n");
+    for (int i = 0; i < NUM_ALC_EXTENSIONS; ++i)
+    {
+        mvbExtensions[i] = RUN_ALC_FUNC((alcIsExtensionPresent(mpDevice, sExtensionNames[i].c_str()) == ALC_TRUE));
+        if (mvbExtensions[i])
+        {
+            LogMsg("", eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\t%s\n", sExtensionNames[i].c_str());
+        }
+    }
 
-	// Get ALC extensions ( ie EFX )
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Checking present ALC extensions\n" );
-	for (int i = 0; i < NUM_ALC_EXTENSIONS; ++i)
-	{
-		mvbExtensions[i] = RUN_ALC_FUNC((alcIsExtensionPresent(mpDevice,sExtensionNames[i].c_str()) == ALC_TRUE));
-		if (mvbExtensions[i])
-		{
-			LogMsg("",eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\t%s\n",sExtensionNames[i].c_str() );
-		}
-	}
+    ALCint lAttrList[] =
+        {
+            ALC_FREQUENCY,
+            acParams.mlOutputFreq,
+            ALC_MONO_SOURCES,
+            acParams.mbVoiceManagement ? 256 : acParams.mlMinMonoSourcesHint,
+            ALC_STEREO_SOURCES,
+            acParams.mbVoiceManagement ? 0 : acParams.mlMinStereoSourcesHint,
+            ALC_MAX_AUXILIARY_SENDS,
+            acParams.mlNumSendsHint,
+            0,
+        };
 
-	ALCint lAttrList[] =
-	{
-		ALC_FREQUENCY,		acParams.mlOutputFreq,
-#ifdef __APPLE__
-#else
-		ALC_MONO_SOURCES,	acParams.mbVoiceManagement ? 256 : acParams.mlMinMonoSourcesHint,
-		ALC_STEREO_SOURCES,	acParams.mbVoiceManagement ? 0 : acParams.mlMinStereoSourcesHint,
-#endif
-		ALC_MAX_AUXILIARY_SENDS, acParams.mlNumSendsHint,
-		0,
-	};
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Creating context\n");
+    // Create and set a context
+    mpContext = RUN_ALC_FUNC(alcCreateContext(mpDevice, lAttrList));
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Creating context\n");
-	// Create and set a context
-#ifdef __EMSCRIPTEN__
-	mpContext = RUN_ALC_FUNC(alcCreateContext ( mpDevice, NULL ));
-#else
-	mpContext = RUN_ALC_FUNC(alcCreateContext ( mpDevice, lAttrList ));
-#endif
+    RUN_ALC_FUNC(alcMakeContextCurrent(mpContext));
 
-	RUN_ALC_FUNC(alcMakeContextCurrent ( mpContext ));
+    if (ALC_ERROR_OCCURED)
+    {
+        LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Error, "Error creating context\n");
+        return false;
+    }
+    FUNC_USES_AL;
 
-	if (ALC_ERROR_OCCURED)
-	{
-		LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Error, "Error creating context\n");
-		return false;
-	}
-	FUNC_USES_AL;
+    /////////////////////////////////////////////////
+    // Retrieve device info, such as extensions
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Checking present AL extensions\n");
+    for (int i = NUM_ALC_EXTENSIONS; i < NUM_EXTENSIONS; ++i)
+    {
+        mvbExtensions[i] = RUN_AL_FUNC((alIsExtensionPresent(sExtensionNames[i].c_str()) == AL_TRUE));
+        if (mvbExtensions[i])
+            LogMsg("", eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\t%s\n", sExtensionNames[i].c_str());
+    }
 
-	/////////////////////////////////////////////////
-	//Retrieve device info, such as extensions
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Checking present AL extensions\n" );
-	for (int i = NUM_ALC_EXTENSIONS; i < NUM_EXTENSIONS; ++i)
-	{
-		mvbExtensions[i] = RUN_AL_FUNC((alIsExtensionPresent(sExtensionNames[i].c_str()) == AL_TRUE));
-		if (mvbExtensions[i])
-			LogMsg("",eOAL_LogVerbose_High, eOAL_LogMsg_Info, "\t%s\n",sExtensionNames[i].c_str() );
-	}
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Retrieving Output Devices\n");
+    std::vector<std::string> llDevices = GetOutputDevices();
+    std::vector<std::string>::iterator it;
+    for (it = llDevices.begin(); it != llDevices.end(); ++it)
+    {
+        LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "\t%s\n", (*it).c_str());
+    }
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Retrieving Output Devices\n");
-	vector<string> llDevices = GetOutputDevices();
-	vector<string>::iterator it;
-	for (it = llDevices.begin(); it != llDevices.end(); ++it) {
-		LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "\t%s\n", (*it).c_str());
-	}
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Retrieving info\n");
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Retrieving info\n" );
+    // Get device name
+    msDeviceName = RUN_ALC_FUNC(alcGetString(mpDevice, ALC_DEVICE_SPECIFIER));
 
-	// Get device name
-	msDeviceName = RUN_ALC_FUNC(alcGetString(mpDevice, ALC_DEVICE_SPECIFIER));
+    // Get vendor name (just fancy stuff,not very useful)
+    msVendorName = RUN_ALC_FUNC(alGetString(AL_VENDOR));
 
-	// Get vendor name (just fancy stuff,not very useful)
-	msVendorName = RUN_ALC_FUNC(alGetString( AL_VENDOR ));
+    // Get renderer info
+    msRenderer = RUN_ALC_FUNC(alGetString(AL_RENDERER));
 
-	//Get renderer info
-	msRenderer = RUN_ALC_FUNC(alGetString ( AL_RENDERER ));
+    // Get the OpenAL impl. version
+    RUN_ALC_FUNC(alcGetIntegerv(mpDevice, ALC_MAJOR_VERSION, sizeof(ALCint), &mlMajorVersion));
+    RUN_ALC_FUNC(alcGetIntegerv(mpDevice, ALC_MINOR_VERSION, sizeof(ALCint), &mlMinorVersion));
 
-	// Get the OpenAL impl. version
-	RUN_ALC_FUNC(alcGetIntegerv ( mpDevice, ALC_MAJOR_VERSION, sizeof(ALCint), &mlMajorVersion ));
-	RUN_ALC_FUNC(alcGetIntegerv ( mpDevice, ALC_MINOR_VERSION, sizeof(ALCint), &mlMinorVersion ));
+    RUN_ALC_FUNC(alcGetIntegerv(mpDevice, ALC_MAX_AUXILIARY_SENDS, sizeof(ALCint), &mlEFXSends));
 
-	RUN_ALC_FUNC(alcGetIntegerv ( mpDevice, ALC_MAX_AUXILIARY_SENDS, sizeof(ALCint), &mlEFXSends));
+    LogMsg("", eOAL_LogVerbose_High, eOAL_LogMsg_Info, "Device name: %s\n", msDeviceName.c_str());
+    LogMsg("", eOAL_LogVerbose_High, eOAL_LogMsg_Info, "OpenAL version: %d.%d\n", mlMajorVersion, mlMinorVersion);
 
-	LogMsg("",eOAL_LogVerbose_High, eOAL_LogMsg_Info, "Device name: %s\n", msDeviceName.c_str() );
-	LogMsg("",eOAL_LogVerbose_High, eOAL_LogMsg_Info, "OpenAL version: %d.%d\n", mlMajorVersion, mlMinorVersion );
+    // Check device version
+    if ((mlMajorVersion < acParams.mlMajorVersionReq) ||
+        ((mlMajorVersion == acParams.mlMajorVersionReq) && (mlMinorVersion < acParams.mlMinorVersionReq)))
+    {
+        LogMsg("", eOAL_LogVerbose_None, eOAL_LogMsg_Error, "Version required: %d.%d\n", acParams.mlMajorVersionReq, acParams.mlMinorVersionReq);
+        return false;
+    }
 
-	// Check device version
-	if ( (mlMajorVersion < acParams.mlMajorVersionReq) ||
-			((mlMajorVersion == acParams.mlMajorVersionReq) && (mlMinorVersion < acParams.mlMinorVersionReq)) )
-	{
-		LogMsg("",eOAL_LogVerbose_None, eOAL_LogMsg_Error, "Version required: %d.%d\n",acParams.mlMajorVersionReq,acParams.mlMinorVersionReq);
-		return false;
-	}
+    //	If alSourceNumHint == -1, create as many sources as possible
+    if (acParams.mlNumSourcesHint == -1)
+        acParams.mlNumSourcesHint = 4096;
 
-	//	If alSourceNumHint == -1, create as many sources as possible
-	if (acParams.mlNumSourcesHint == -1)
-		acParams.mlNumSourcesHint = 4096;
+    /////////////////////////////////////////////////
+    // Start EFX if requested
+    if (acParams.mbUseEFX && IsExtensionAvailable(OAL_ALC_EXT_EFX))
+    {
+        LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Starting EFX on request\n");
+        mpEFXManager = new cOAL_EFXManager;
+        mbEFXActive = mpEFXManager->Initialize(acParams.mlNumSlotsHint, mlEFXSends, acParams.mbUseThread, acParams.mlSlotUpdateFreq);
+        if (!mbEFXActive)
+        {
+            mpEFXManager->Destroy();
+            delete mpEFXManager;
+        }
+    }
 
-	/////////////////////////////////////////////////
-	//Start EFX if requested
-	if (acParams.mbUseEFX && IsExtensionAvailable (OAL_ALC_EXT_EFX))
-	{
-		LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Starting EFX on request\n" );
-		mpEFXManager = new cOAL_EFXManager;
-		mbEFXActive = mpEFXManager->Initialize( acParams.mlNumSlotsHint, mlEFXSends, acParams.mbUseThread, acParams.mlSlotUpdateFreq );
-		if (!mbEFXActive)
-		{
-			mpEFXManager->Destroy();
-			delete mpEFXManager;
-		}
-	}
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Creating Source Manager\n");
+    // Create The source manager
+    mpSourceManager = new cOAL_SourceManager;
+    if (mpSourceManager->Initialize(acParams.mbVoiceManagement, acParams.mlNumSourcesHint, acParams.mbUseThread, acParams.mlUpdateFreq, mlEFXSends) == false)
+    {
+        LogMsg("", eOAL_LogVerbose_None, eOAL_LogMsg_Error, "Error creating Source Manager\n");
+        return false;
+    }
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Creating Source Manager\n" );
-	//Create The source manager
-	mpSourceManager = new cOAL_SourceManager;
-	if ( mpSourceManager->Initialize( acParams.mbVoiceManagement, acParams.mlNumSourcesHint, acParams.mbUseThread, acParams.mlUpdateFreq, mlEFXSends ) == false)
-	{
-		LogMsg("",eOAL_LogVerbose_None, eOAL_LogMsg_Error, "Error creating Source Manager\n");
-		return false;
-	}
-
-	return true;
+    return true;
 }
 
 //-------------------------------------------------------------------------
@@ -229,69 +219,70 @@ bool cOAL_Device::Init( cOAL_Init_Params& acParams )
 
 //-------------------------------------------------------------------------
 
-void cOAL_Device::Close ()
+void cOAL_Device::Close()
 {
-	DEF_FUNC_NAME("cOAL_Device::Close()");
-	FUNC_USES_ALC;
+    DEF_FUNC_NAME("cOAL_Device::Close()");
+    FUNC_USES_ALC;
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Command, "Closing device...\n" );
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Samples...\n" );
-	//Delete samples
-	{
-		for(tSampleListIt it = mlstSamples.begin(); it!=mlstSamples.end(); ++it )
-			delete (*it);
-		mlstSamples.clear();
-	}
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Command, "Closing device...\n");
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Samples...\n");
+    // Delete samples
+    {
+        for (tSampleListIt it = mlstSamples.begin(); it != mlstSamples.end(); ++it)
+            delete (*it);
+        mlstSamples.clear();
+    }
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Streams...\n" );
-	{
-		for (tStreamListIt it=mlstStreams.begin();it!=mlstStreams.end(); ++it )
-			delete (*it);
-		mlstStreams.clear();
-	}
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Streams...\n");
+    {
+        for (tStreamListIt it = mlstStreams.begin(); it != mlstStreams.end(); ++it)
+            delete (*it);
+        mlstStreams.clear();
+    }
 
-	if(mpSourceManager)
-	{
-		LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Source Manager...\n" );
-		mpSourceManager->Destroy();
-		delete mpSourceManager;
-		mpSourceManager = NULL;
-	}
+    if (mpSourceManager)
+    {
+        LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Source Manager...\n");
+        mpSourceManager->Destroy();
+        delete mpSourceManager;
+        mpSourceManager = nullptr;
+    }
 
-	if (mpEFXManager)
-	{
-		LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up EFX Manager...\n" );
-		mpEFXManager->Destroy();
-		delete mpEFXManager;
-		mpEFXManager = NULL;
-	}
+    if (mpEFXManager)
+    {
+        LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up EFX Manager...\n");
+        mpEFXManager->Destroy();
+        delete mpEFXManager;
+        mpEFXManager = nullptr;
+    }
 
-	LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Context and closing Low Level Device...\n" );
-	//Delete device and context.
-	RUN_ALC_FUNC(alcMakeContextCurrent ( NULL ));
-	RUN_ALC_FUNC(alcDestroyContext ( mpContext ));
-	RUN_ALC_FUNC(alcCloseDevice ( mpDevice ));
+    LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Cleaning up Context and closing Low Level Device...\n");
+    // Delete device and context.
+    RUN_ALC_FUNC(alcMakeContextCurrent(nullptr));
+    RUN_ALC_FUNC(alcDestroyContext(mpContext));
+    RUN_ALC_FUNC(alcCloseDevice(mpDevice));
 
-	if (!ALC_ERROR_OCCURED)
-		LogMsg("",eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Done\n" );
+    if (!ALC_ERROR_OCCURED)
+        LogMsg("", eOAL_LogVerbose_Low, eOAL_LogMsg_Info, "Done\n");
 }
 
 //-------------------------------------------------------------------------
 
 bool cOAL_Device::RegainContext()
 {
-	DEF_FUNC_NAME("cOAL_Device::RegainContext");
-	FUNC_USES_ALC;
+    DEF_FUNC_NAME("cOAL_Device::RegainContext");
+    FUNC_USES_ALC;
 
-	if (mpContext == NULL)
-		return false;
-	bool bSuccess = RUN_ALC_FUNC((alcMakeContextCurrent(mpContext) == AL_TRUE));
-
-	if (bSuccess)
-	{
-		RUN_ALC_FUNC(alcProcessContext(mpContext));
-	}
-	return bSuccess;
+    if (!mpContext)
+    {
+        return false;
+    }
+    bool bSuccess = RUN_ALC_FUNC((alcMakeContextCurrent(mpContext) == AL_TRUE));
+    if (bSuccess)
+    {
+        RUN_ALC_FUNC(alcProcessContext(mpContext));
+    }
+    return bSuccess;
 }
 
 //-------------------------------------------------------------------------
@@ -304,208 +295,215 @@ bool cOAL_Device::RegainContext()
 
 //-------------------------------------------------------------------------
 
-static eOAL_SampleFormat DetectFormatByFileName(const wstring& asFilename)
+static eOAL_SampleFormat DetectFormatByFileName(const std::wstring& asFilename)
 {
-	// Check file format and load the sample data according to it
-	wstring strExt = GetExtensionW(asFilename);
-	if(strExt.compare(L"ogg")==0 || strExt.compare(L"oga")==0)
-		return eOAL_SampleFormat_Ogg;	// Load an Ogg Vorbis sample
-	else if(strExt.compare(L"wav")==0)
-		return eOAL_SampleFormat_Wav;	// Load a .WAV sample
-	return eOAL_SampleFormat_Unknown;
+    // Check file format and load the sample data according to it
+    std::wstring strExt = GetExtensionW(asFilename);
+    if (strExt.compare(L"ogg") == 0 || strExt.compare(L"oga") == 0)
+        return eOAL_SampleFormat_Ogg; // Load an Ogg Vorbis sample
+    else if (strExt.compare(L"wav") == 0)
+        return eOAL_SampleFormat_Wav; // Load a .WAV sample
+    return eOAL_SampleFormat_Unknown;
 }
 
 static bool CompareBuffer(const char* apBuffer, const char* asMatch, size_t aSize)
 {
-	for (size_t p= 0u; p < aSize; ++p)
-	{
-		if (apBuffer[p] != asMatch[p]) return false;
-	}
-	return true;
+    for (size_t p = 0u; p < aSize; ++p)
+    {
+        if (apBuffer[p] != asMatch[p])
+            return false;
+    }
+    return true;
 }
 
 static eOAL_SampleFormat DetectFormatByMagic(const void* apBuffer, size_t aSize)
 {
-	const char* buff = (char*)apBuffer;
-	if (aSize >= 35 && CompareBuffer(buff, "OggS", 4) && CompareBuffer(&buff[28], "\x01vorbis", 7))
-	{
-		return eOAL_SampleFormat_Ogg;
-	}
-	if (aSize >= 12 && CompareBuffer(buff, "RIFF", 4) && CompareBuffer(&buff[8], "WAVE", 4))
-	{
-		return eOAL_SampleFormat_Wav;
-	}
-	return eOAL_SampleFormat_Unknown;
+    const char* buff = (char*)apBuffer;
+    if (aSize >= 35 && CompareBuffer(buff, "OggS", 4) && CompareBuffer(&buff[28], "\x01vorbis", 7))
+    {
+        return eOAL_SampleFormat_Ogg;
+    }
+    if (aSize >= 12 && CompareBuffer(buff, "RIFF", 4) && CompareBuffer(&buff[8], "WAVE", 4))
+    {
+        return eOAL_SampleFormat_Wav;
+    }
+    return eOAL_SampleFormat_Unknown;
 }
 
 //-------------------------------------------------------------------------
 
-cOAL_Sample* cOAL_Device::LoadSample(const string &asFilename, eOAL_SampleFormat format)
+cOAL_Sample* cOAL_Device::LoadSample(const std::string& asFilename, eOAL_SampleFormat format)
 {
-	return LoadSample(String2WString(asFilename), format);
+    return LoadSample(String2WString(asFilename), format);
 }
 
 //-------------------------------------------------------------------------
 
-cOAL_Sample* cOAL_Device::LoadSample(const wstring& asFilename, eOAL_SampleFormat format)
+cOAL_Sample* cOAL_Device::LoadSample(const std::wstring& asFilename, eOAL_SampleFormat format)
 {
-	cOAL_Sample *pSample = NULL;
+    cOAL_Sample* pSample = nullptr;
 
-	if (format == eOAL_SampleFormat_Detect) {
-		format = DetectFormatByFileName(asFilename);
-	}
-	switch(format) {
-		case eOAL_SampleFormat_Ogg:
-			pSample = new cOAL_OggSample;
-			break;
-		case eOAL_SampleFormat_Wav:
-			pSample = new cOAL_WAVSample;
-			break;
-		default:
-			return NULL;
-	}
+    if (format == eOAL_SampleFormat_Detect)
+    {
+        format = DetectFormatByFileName(asFilename);
+    }
+    switch (format)
+    {
+    case eOAL_SampleFormat_Ogg:
+        pSample = new cOAL_OggSample;
+        break;
+    case eOAL_SampleFormat_Wav:
+        pSample = new cOAL_WAVSample;
+        break;
+    default:
+        return nullptr;
+    }
 
-	if(pSample->CreateFromFile(asFilename) )
-		mlstSamples.push_back(pSample);
-	else
-	{
-		delete pSample;
-		pSample = NULL;
-	}
+    if (pSample->CreateFromFile(asFilename))
+        mlstSamples.push_back(pSample);
+    else
+    {
+        delete pSample;
+        pSample = nullptr;
+    }
 
-	return pSample;
+    return pSample;
 }
 
 //-------------------------------------------------------------------------
 
 cOAL_Sample* cOAL_Device::LoadSampleFromBuffer(const void* apBuffer, size_t aSize, eOAL_SampleFormat format)
 {
-	cOAL_Sample *pSample = NULL;
+    cOAL_Sample* pSample = nullptr;
 
-	if (format == eOAL_SampleFormat_Detect) {
-		format = DetectFormatByMagic(apBuffer, aSize);
-	}
-	switch(format) {
-		case eOAL_SampleFormat_Ogg:
-			pSample = new cOAL_OggSample;
-			break;
-		case eOAL_SampleFormat_Wav:
-			pSample = new cOAL_WAVSample;
-			break;
-		default:
-			return NULL;
-	}
+    if (format == eOAL_SampleFormat_Detect)
+    {
+        format = DetectFormatByMagic(apBuffer, aSize);
+    }
+    switch (format)
+    {
+    case eOAL_SampleFormat_Ogg:
+        pSample = new cOAL_OggSample;
+        break;
+    case eOAL_SampleFormat_Wav:
+        pSample = new cOAL_WAVSample;
+        break;
+    default:
+        return nullptr;
+    }
 
-	if(pSample->CreateFromBuffer(apBuffer, aSize) )
-		mlstSamples.push_back(pSample);
-	else
-	{
-		delete pSample;
-		pSample = NULL;
-	}
+    if (pSample->CreateFromBuffer(apBuffer, aSize))
+        mlstSamples.push_back(pSample);
+    else
+    {
+        delete pSample;
+        pSample = nullptr;
+    }
 
-	return pSample;
+    return pSample;
 }
 
 //-------------------------------------------------------------------------
 
-cOAL_Stream* cOAL_Device::LoadStream(const string& asFilename, eOAL_SampleFormat format)
+cOAL_Stream* cOAL_Device::LoadStream(const std::string& asFilename, eOAL_SampleFormat format)
 {
-	return LoadStream(String2WString(asFilename), format);
+    return LoadStream(String2WString(asFilename), format);
 }
 
 //-------------------------------------------------------------------------
 
-cOAL_Stream* cOAL_Device::LoadStream(const wstring &asFilename, eOAL_SampleFormat format)
+cOAL_Stream* cOAL_Device::LoadStream(const std::wstring& asFilename, eOAL_SampleFormat format)
 {
-	cOAL_Stream *pStream = NULL;
+    cOAL_Stream* pStream = nullptr;
 
-	if (format == eOAL_SampleFormat_Detect)
-	{
-		format = DetectFormatByFileName(asFilename);
-	}
+    if (format == eOAL_SampleFormat_Detect)
+    {
+        format = DetectFormatByFileName(asFilename);
+    }
 
-	switch(format) {
-		case eOAL_SampleFormat_Ogg:
-			pStream = new cOAL_OggStream;
-			break;
-		default:
-			return NULL;
-	}
+    switch (format)
+    {
+    case eOAL_SampleFormat_Ogg:
+        pStream = new cOAL_OggStream;
+        break;
+    default:
+        return nullptr;
+    }
 
-	/////////////////////////////////
-	//Create from file
-	if(pStream->CreateFromFile(asFilename))
-	{
-		mlstStreams.push_back(pStream);
-	}
-	else
-	{
-		delete pStream;
-		pStream = NULL;
-	}
+    /////////////////////////////////
+    // Create from file
+    if (pStream->CreateFromFile(asFilename))
+    {
+        mlstStreams.push_back(pStream);
+    }
+    else
+    {
+        delete pStream;
+        pStream = nullptr;
+    }
 
-	return pStream;
-
+    return pStream;
 }
 
 //-------------------------------------------------------------------------
 
 cOAL_Stream* cOAL_Device::LoadStreamFromBuffer(const void* apBuffer, size_t aSize, eOAL_SampleFormat format)
 {
-	cOAL_Stream *pStream = NULL;
+    cOAL_Stream* pStream = nullptr;
 
-	if (format == eOAL_SampleFormat_Detect) {
-		format = DetectFormatByMagic(apBuffer, aSize);
-	}
-	switch(format) {
-		case eOAL_SampleFormat_Ogg:
-			pStream = new cOAL_OggStream;
-			break;
-		default:
-			return NULL;
-	}
+    if (format == eOAL_SampleFormat_Detect)
+    {
+        format = DetectFormatByMagic(apBuffer, aSize);
+    }
+    switch (format)
+    {
+    case eOAL_SampleFormat_Ogg:
+        pStream = new cOAL_OggStream;
+        break;
+    default:
+        return nullptr;
+    }
 
-	if(pStream->CreateFromBuffer(apBuffer, aSize) )
-		mlstStreams.push_back(pStream);
-	else
-	{
-		delete pStream;
-		pStream = NULL;
-	}
+    if (pStream->CreateFromBuffer(apBuffer, aSize))
+        mlstStreams.push_back(pStream);
+    else
+    {
+        delete pStream;
+        pStream = nullptr;
+    }
 
-	return pStream;
+    return pStream;
 }
 
 //-------------------------------------------------------------------------
 
 cOAL_Stream* cOAL_Device::LoadCustomStream(const tStreamCallbacks& aCallback, const tStreamInfo& aInfo, void* apData)
 {
-	cOAL_Stream *pStream = new cOAL_CustomStream(aCallback, aInfo, apData);
-	mlstStreams.push_back(pStream);
-	return pStream;
+    cOAL_Stream* pStream = new cOAL_CustomStream(aCallback, aInfo, apData);
+    mlstStreams.push_back(pStream);
+    return pStream;
 }
 
 //-------------------------------------------------------------------------
 
-void  cOAL_Device::UnloadSample(cOAL_Sample* apSample)
+void cOAL_Device::UnloadSample(cOAL_Sample* apSample)
 {
-	if(apSample == NULL)
-		return;
+    if (apSample == nullptr)
+        return;
 
-	mlstSamples.remove(apSample);
-	delete apSample;
+    mlstSamples.remove(apSample);
+    delete apSample;
 }
 
 //-------------------------------------------------------------------------
 
 void cOAL_Device::UnloadStream(cOAL_Stream* apStream)
 {
-	if(apStream == NULL)
-		return;
+    if (apStream == nullptr)
+        return;
 
-	mlstStreams.remove(apStream);
-	delete apStream;
+    mlstStreams.remove(apStream);
+    delete apStream;
 }
 
 //-------------------------------------------------------------------------
@@ -518,49 +516,49 @@ void cOAL_Device::UnloadStream(cOAL_Stream* apStream)
 
 //-------------------------------------------------------------------------
 
-void cOAL_Device::SetListenerGain ( float afGain )
+void cOAL_Device::SetListenerGain(float afGain)
 {
-	DEF_FUNC_NAME ("cOAL_Device::SetListenerGain()");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("cOAL_Device::SetListenerGain()");
+    FUNC_USES_AL;
 
-	if ( afGain < 0 )
-		afGain = 0;
-	if ( afGain > 1 )
-		afGain = 1;
+    if (afGain < 0)
+        afGain = 0;
+    if (afGain > 1)
+        afGain = 1;
 
-	RUN_AL_FUNC(alListenerf ( AL_GAIN, afGain ));
+    RUN_AL_FUNC(alListenerf(AL_GAIN, afGain));
 }
 
 //-------------------------------------------------------------------------
 
-void cOAL_Device::SetListenerPosition (const float* apPos )
+void cOAL_Device::SetListenerPosition(const float* apPos)
 {
-	DEF_FUNC_NAME ("cOAL_Device::SetListenerPosition()");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("cOAL_Device::SetListenerPosition()");
+    FUNC_USES_AL;
 
-	RUN_AL_FUNC(alListenerfv ( AL_POSITION, apPos ));
+    RUN_AL_FUNC(alListenerfv(AL_POSITION, apPos));
 }
 
 //-------------------------------------------------------------------------
 
-void cOAL_Device::SetListenerVelocity (const float* apVel )
+void cOAL_Device::SetListenerVelocity(const float* apVel)
 {
-	DEF_FUNC_NAME ("cOAL_Device::SetListenerVelocity()");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("cOAL_Device::SetListenerVelocity()");
+    FUNC_USES_AL;
 
-	RUN_AL_FUNC(alListenerfv (AL_VELOCITY,apVel));
+    RUN_AL_FUNC(alListenerfv(AL_VELOCITY, apVel));
 }
 
 //-------------------------------------------------------------------------
 
 void cOAL_Device::SetListenerOrientation(const float* apForward, const float* apUp)
 {
-	DEF_FUNC_NAME ("cOAL_Device::SetListenerOrientation()");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("cOAL_Device::SetListenerOrientation()");
+    FUNC_USES_AL;
 
-	float fOrientation[6] = { apForward[0], apForward[1], apForward[2], apUp[0], apUp[1], apUp[2] };
+    float fOrientation[6] = {apForward[0], apForward[1], apForward[2], apUp[0], apUp[1], apUp[2]};
 
-	RUN_AL_FUNC(alListenerfv ( AL_ORIENTATION, fOrientation ));
+    RUN_AL_FUNC(alListenerfv(AL_ORIENTATION, fOrientation));
 }
 
 //-------------------------------------------------------------------------
@@ -573,161 +571,164 @@ void cOAL_Device::SetListenerOrientation(const float* apForward, const float* ap
 
 //-------------------------------------------------------------------------
 
-int cOAL_Device::PlaySample( int alSource, cOAL_Sample *apSample, int alPriority, float afVolume, bool abStartPaused )
+int cOAL_Device::PlaySample(int alSource, cOAL_Sample* apSample, int alPriority, float afVolume, bool abStartPaused)
 {
-	if (apSample == NULL)
-		return -1;
+    if (apSample == nullptr)
+        return -1;
 
-	cOAL_Source *pSource = NULL;
-	if (alSource == OAL_FREE)
-		pSource = mpSourceManager->GetAvailableSource( alPriority, apSample->GetChannels() );
-	else
-		pSource = mpSourceManager->GetSource(alSource,true);
+    cOAL_Source* pSource = nullptr;
+    if (alSource == OAL_FREE)
+        pSource = mpSourceManager->GetAvailableSource(alPriority, apSample->GetChannels());
+    else
+        pSource = mpSourceManager->GetSource(alSource, true);
 
-	if (pSource == NULL)
-		return -1;
+    if (pSource == nullptr)
+        return -1;
 
-	int lSourceHandle;
+    int lSourceHandle;
 
-	pSource->Lock();
-	{
-		lSourceHandle = pSource->BindData(apSample);
-		pSource->SetPriority(alPriority);
-		pSource->SetGain(afVolume);
-		pSource->Pause(abStartPaused);
-		pSource->Play();
-	}
-	pSource->Unlock();
+    pSource->Lock();
+    {
+        lSourceHandle = pSource->BindData(apSample);
+        pSource->SetPriority(alPriority);
+        pSource->SetGain(afVolume);
+        pSource->Pause(abStartPaused);
+        pSource->Play();
+    }
+    pSource->Unlock();
 
-	return lSourceHandle;
+    return lSourceHandle;
 }
 
 //-------------------------------------------------------------------------
 
-int cOAL_Device::PlayStream( int alSource, cOAL_Stream *apStream, float afVolume, bool abStartPaused )
+int cOAL_Device::PlayStream(int alSource, cOAL_Stream* apStream, float afVolume, bool abStartPaused)
 {
-	if (apStream == NULL)
-		return -1;
+    if (apStream == nullptr)
+        return -1;
 
-	cOAL_Source *pSource = NULL;
-	if (alSource == OAL_FREE)
-		pSource = mpSourceManager->GetAvailableSource( 256, apStream->GetChannels() );
-	else
-		pSource = mpSourceManager->GetSource(alSource,true);
+    cOAL_Source* pSource = nullptr;
+    if (alSource == OAL_FREE)
+        pSource = mpSourceManager->GetAvailableSource(256, apStream->GetChannels());
+    else
+        pSource = mpSourceManager->GetSource(alSource, true);
 
-	if (pSource == NULL)
-		return -1;
+    if (pSource == nullptr)
+        return -1;
 
-	int lSourceHandle;
+    int lSourceHandle;
 
-	pSource->Lock();
-	{
-		lSourceHandle = pSource->BindData(apStream);
-		pSource->SetGain(afVolume);
-		pSource->Pause(abStartPaused);
-		pSource->Play();
-	}
-	pSource->Unlock();
+    pSource->Lock();
+    {
+        lSourceHandle = pSource->BindData(apStream);
+        pSource->SetGain(afVolume);
+        pSource->Pause(abStartPaused);
+        pSource->Play();
+    }
+    pSource->Unlock();
 
-	if (lSourceHandle != -1) mpSourceManager->AddActiveStream(pSource);
+    if (lSourceHandle != -1)
+        mpSourceManager->AddActiveStream(pSource);
 
-	return lSourceHandle;
+    return lSourceHandle;
 }
 
 //-------------------------------------------------------------------------
 
-cOAL_Source* cOAL_Device::GetSource( int alSourceHandle )
+cOAL_Source* cOAL_Device::GetSource(int alSourceHandle)
 {
-	if (mpSourceManager)
-		return mpSourceManager->GetSource(alSourceHandle);
+    if (mpSourceManager)
+        return mpSourceManager->GetSource(alSourceHandle);
 
-	return NULL;
+    return nullptr;
 }
 
 //-------------------------------------------------------------------------
 
-string& cOAL_Device::GetExtensionName(int alWhich)
+std::string& cOAL_Device::GetExtensionName(int alWhich)
 {
-	if( (alWhich >= 0) && (alWhich < NUM_EXTENSIONS))
-		return sExtensionNames[alWhich];
-	else
-		return sExtensionNames[NUM_EXTENSIONS];
+    if ((alWhich >= 0) && (alWhich < NUM_EXTENSIONS))
+        return sExtensionNames[alWhich];
+    else
+        return sExtensionNames[NUM_EXTENSIONS];
 }
 
 //-------------------------------------------------------------------------
 
-string cOAL_Device::GetDefaultDeviceName()
+std::string cOAL_Device::GetDefaultDeviceName()
 {
-	DEF_FUNC_NAME(cOAL_Device::GetDefaultDeviceName);
-	FUNC_USES_ALC;
+    DEF_FUNC_NAME(cOAL_Device::GetDefaultDeviceName);
+    FUNC_USES_ALC;
 
-	string sDev = alcGetString(NULL, ALC_DEFAULT_DEVICE_SPECIFIER);
+    std::string sDev = alcGetString(nullptr, ALC_DEFAULT_DEVICE_SPECIFIER);
 
-	return sDev;
+    return sDev;
 }
 
 //-------------------------------------------------------------------------
-vector<string> cOAL_Device::GetOutputDevices()
+std::vector<std::string> cOAL_Device::GetOutputDevices()
 {
-	DEF_FUNC_NAME(cOAL_Device::GetOutputDevices);
-	FUNC_USES_ALC;
-	vector<string> devices;
-	bool bEnumerate = RUN_ALC_FUNC(alcIsExtensionPresent(NULL, (const ALCchar*)"ALC_ENUMERATION_EXT") == AL_TRUE);
-	bool bEnumerate_all = RUN_ALC_FUNC(alcIsExtensionPresent(NULL, (const ALCchar*)"ALC_ENUMERATE_ALL_EXT") == AL_TRUE);
-	if (bEnumerate) 
-	{
-		const char *s;
-		if (bEnumerate_all) 
-		{
-			// walk devices
-			s = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
-		} else 
-		{
-			s = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
-		}
-		while (*s != '\0') 
-		{
-			devices.push_back(string(s));
-			// find next string
-			while (*s++ != '\0');
-		}
-	}
-	return devices;
+    DEF_FUNC_NAME(cOAL_Device::GetOutputDevices);
+    FUNC_USES_ALC;
+    std::vector<std::string> devices;
+    bool bEnumerate = RUN_ALC_FUNC(alcIsExtensionPresent(nullptr, (const ALCchar*)"ALC_ENUMERATION_EXT") == AL_TRUE);
+    bool bEnumerate_all = RUN_ALC_FUNC(alcIsExtensionPresent(nullptr, (const ALCchar*)"ALC_ENUMERATE_ALL_EXT") == AL_TRUE);
+    if (bEnumerate)
+    {
+        const char* s;
+        if (bEnumerate_all)
+        {
+            // walk devices
+            s = alcGetString(nullptr, ALC_ALL_DEVICES_SPECIFIER);
+        }
+        else
+        {
+            s = alcGetString(nullptr, ALC_DEVICE_SPECIFIER);
+        }
+        while (*s != '\0')
+        {
+            devices.push_back(std::string(s));
+            // find next string
+            while (*s++ != '\0')
+                ;
+        }
+    }
+    return devices;
 }
 
 //-------------------------------------------------------------------------
 
 void cOAL_Device::SetDistanceModel(eOAL_DistanceModel aModel)
 {
-	DEF_FUNC_NAME("OAL_SetDistanceModel");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("OAL_SetDistanceModel");
+    FUNC_USES_AL;
 
-	ALenum distModel;
-	switch(aModel)
-	{
-	case eOAL_DistanceModel_Inverse:
-		distModel = AL_INVERSE_DISTANCE;
-		break;
-	case eOAL_DistanceModel_Inverse_Clamped:
-		distModel = AL_INVERSE_DISTANCE_CLAMPED;
-		break;
-	case eOAL_DistanceModel_Linear:
-		distModel = AL_LINEAR_DISTANCE;
-		break;
-	case eOAL_DistanceModel_Linear_Clamped:
-		distModel = AL_LINEAR_DISTANCE_CLAMPED;
-		break;
-	case eOAL_DistanceModel_Exponent:
-		distModel = AL_EXPONENT_DISTANCE;
-		break;
-	case eOAL_DistanceModel_Exponent_Clamped:
-		distModel = AL_EXPONENT_DISTANCE_CLAMPED;
-		break;
-	case eOAL_DistanceModel_None:
-	default:
-		distModel = AL_NONE;
-		break;
-	}
+    ALenum distModel;
+    switch (aModel)
+    {
+    case eOAL_DistanceModel_Inverse:
+        distModel = AL_INVERSE_DISTANCE;
+        break;
+    case eOAL_DistanceModel_Inverse_Clamped:
+        distModel = AL_INVERSE_DISTANCE_CLAMPED;
+        break;
+    case eOAL_DistanceModel_Linear:
+        distModel = AL_LINEAR_DISTANCE;
+        break;
+    case eOAL_DistanceModel_Linear_Clamped:
+        distModel = AL_LINEAR_DISTANCE_CLAMPED;
+        break;
+    case eOAL_DistanceModel_Exponent:
+        distModel = AL_EXPONENT_DISTANCE;
+        break;
+    case eOAL_DistanceModel_Exponent_Clamped:
+        distModel = AL_EXPONENT_DISTANCE_CLAMPED;
+        break;
+    case eOAL_DistanceModel_None:
+    default:
+        distModel = AL_NONE;
+        break;
+    }
 
-	RUN_AL_FUNC(alDistanceModel(distModel));
+    RUN_AL_FUNC(alDistanceModel(distModel));
 }

@@ -38,7 +38,7 @@ public:
 		if ((alSlotHandle >= 0) && ((unsigned int) alSlotHandle < mpvSlots->size()) )
 			return (*mpvSlots)[alSlotHandle]; 
 		else 
-			return NULL;
+			return nullptr;
 	}
 
 	bool Initialize(int alNumSlotsHint, int alNumSends, bool abUseThread, int alSlotUpdateFreq);

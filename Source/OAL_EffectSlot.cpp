@@ -12,9 +12,9 @@
 
 #include <SDL2/SDL_mutex.h>
 
-cOAL_EffectSlot::cOAL_EffectSlot( cOAL_EFXManager* apEFXManager, int alId) : iOAL_LowLevelObject("EffectSlot"),
+cOAL_EffectSlot::cOAL_EffectSlot( cOAL_EFXManager* apEFXManager, int alId) :
 																			  mlId(alId),
-																			  mpEffect(NULL),
+																			  mpEffect(nullptr),
 																			  mfGain(1.0f),
 																			  mbAutoAdjust (true),
 																			  mpEFXManager(apEFXManager)
@@ -65,7 +65,7 @@ bool cOAL_EffectSlot::IsValidObject()
 void cOAL_EffectSlot::Reset()
 {
 	this->SetGain(0);
-	this->AttachEffect(NULL);
+	this->AttachEffect(nullptr);
 }
 
 bool cOAL_EffectSlot::AttachEffect ( cOAL_Effect *apEffect )
@@ -75,8 +75,8 @@ bool cOAL_EffectSlot::AttachEffect ( cOAL_Effect *apEffect )
 
     mpEffect = apEffect;
 
-	RUN_AL_FUNC ( alAuxiliaryEffectSloti (mlObjectId, AL_EFFECTSLOT_EFFECT, ((mpEffect == NULL)? AL_EFFECT_NULL : mpEffect->GetEffectID()) ) );
-	
+	RUN_AL_FUNC ( alAuxiliaryEffectSloti (mlObjectId, AL_EFFECTSLOT_EFFECT, ((mpEffect == nullptr)? AL_EFFECT_NULL : mpEffect->GetEffectID()) ) );
+
 	return !AL_ERROR_OCCURED;
 }
 

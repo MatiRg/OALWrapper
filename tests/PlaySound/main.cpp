@@ -20,7 +20,7 @@ void playSample(cOAL_Sample* pSample)
 		OAL_Source_SetPaused(s1, false);
         while (OAL_Source_IsPlaying(s1)) {
         }
-		pSample = NULL;
+		pSample = nullptr;
     } else {
         printf("Failed\n");
     }
@@ -47,7 +47,7 @@ int main (int argc, char *argv[])
 		strFilename = argv[2];
 	}
 
-	cOAL_Sample *pSample = NULL;
+	cOAL_Sample *pSample = nullptr;
 
     printf ("Initializing OpenAL... ");
     fflush(stdout);

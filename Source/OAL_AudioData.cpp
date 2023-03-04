@@ -68,5 +68,5 @@ cOAL_Buffer* iOAL_AudioData::GetBufferByID(ALuint alID)
 		if(alID==pBuffer->GetObjectID())
 			return pBuffer;
 	}
-	return NULL;
+	return nullptr;
 }

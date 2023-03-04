@@ -11,7 +11,7 @@
 
 extern cOAL_Device* gpDevice;
 
-cOAL_Filter::cOAL_Filter () : iOAL_LowLevelObject("Filter"), 
+cOAL_Filter::cOAL_Filter () :
 							  mfGain(1.0f), 
 							  mfGainHF(1.0f), 
 							  mfGainLF(1.0f), 

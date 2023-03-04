@@ -203,11 +203,7 @@ bool cOAL_EFXManager::Initialize(int alNumSlotsHint, int alNumSends, bool abUseT
 
 		mlThreadWaitTime = 1000/alSlotUpdateFreq;
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		mpUpdaterThread = SDL_CreateThread ( SlotUpdaterThread, "EFX Slot Updater", NULL );
-#else
-		mpUpdaterThread = SDL_CreateThread ( SlotUpdaterThread, NULL );
-#endif
 	}
 
 	LogMsg("",eOAL_LogVerbose_Medium, eOAL_LogMsg_Info, "EFX succesfully initialized.\n" );

@@ -23,8 +23,8 @@ int main (int argc, char *argv[])
 		strFilename2.assign(argv[soundptr++]);
 	}
 
-    cOAL_Stream *pStream = NULL;
-    cOAL_Stream *pStream2 = NULL;
+    cOAL_Stream *pStream = nullptr;
+    cOAL_Stream *pStream2 = nullptr;
     alGetError();
 
     printf ("Initializing OpenAL... ");
@@ -76,7 +76,7 @@ int main (int argc, char *argv[])
             if ( !OAL_Source_IsPlaying(s2) ) {
                 OAL_Source_Stop ( s2);
                 OAL_Stream_Unload ( pStream2 );
-                pStream2 = NULL;
+                pStream2 = nullptr;
                 if (soundptr < argc) {
                     strFilename2.assign(argv[soundptr++]);
                     printf ("Loading new stream \"%s\" ... ",strFilename2.c_str());

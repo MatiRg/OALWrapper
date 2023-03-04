@@ -28,10 +28,10 @@ public:
 	bool IsValidObject();
 
 	bool AttachEffect ( cOAL_Effect* apEffect );
-	inline bool IsFree() { return (mpEffect == NULL); }
+	bool IsFree() { return !mpEffect; }
 
 	void SetGain ( float afGain );
-	inline float GetGain () { return mfGain; }
+	float GetGain () { return mfGain; }
 
 	void SetAutoAdjust (bool abAuto);
 	bool GetAutoAdjust () { return mbAutoAdjust; }

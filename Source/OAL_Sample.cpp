@@ -80,7 +80,7 @@ string cOAL_Sample::GetDebugInfo()
 /*
 void cOAL_Sample::Log( eOAL_LogVerbose aVerboseLevelReq, eOAL_LogMsg aMessageType, const char* asMessage, ...)
 {
-	if(asMessage == NULL)
+	if(asMessage == nullptr)
 		return;
 	if(!mbLogEnabled)
 		return;
