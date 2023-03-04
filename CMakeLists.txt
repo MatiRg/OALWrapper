@@ -127,9 +127,9 @@ endif()
 target_compile_options(OALWrapper PUBLIC ${CMP_OPT})
 
 if(BUILD_SAMPLES)
-    add_executable(HelloSound Tests/Hello/main.cpp)
+    add_executable(HelloSound Samples/Hello/main.cpp)
     target_link_libraries(HelloSound PUBLIC OALWrapper)
     #
-    add_executable(PlaySound Tests/PlaySound/main.cpp)
+    add_executable(PlaySound Samples/PlaySound/main.cpp)
     target_link_libraries(PlaySound PUBLIC OALWrapper)
 endif()
