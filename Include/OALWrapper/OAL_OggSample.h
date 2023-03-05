@@ -6,32 +6,22 @@
  * For conditions of distribution and use, see copyright notice in LICENSE
  */
 /**
-	@file OAL_OggSample.h
-	@author Luis Rodero
-	@date 2006-10-02
-	@version 0.1
-	Derived class for containing Ogg Vorbis Sample data 
+    @file OAL_OggSample.h
+    @author Luis Rodero
+    @date 2006-10-02
+    @version 0.1
+    Derived class for containing Ogg Vorbis Sample data
 */
-
-#ifndef _OAL_OGGSAMPLE_H
-#define _OAL_OGGSAMPLE_H
-
+#pragma once
 #include "OAL_Sample.h"
-
-//-------------------------------------------------------------------------------
 
 struct OggVorbis_File;
 
 class cOAL_OggSample : public cOAL_Sample
 {
 public:
-	bool CreateFromFile(const std::wstring& asFilename);
-	bool CreateFromBuffer(const void *apBuffer, size_t aSize);
-protected:
+    bool CreateFromFile(const std::wstring& asFilename);
+    bool CreateFromBuffer(const void* apBuffer, size_t aSize);
 private:
-	bool LoadOgg(OggVorbis_File& ovFileHandle);
+    bool LoadOgg(OggVorbis_File& ovFileHandle);
 };
-
-//-------------------------------------------------------------------------------
-
-#endif	// _OAL_SAMPLE_H

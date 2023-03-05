@@ -5,111 +5,97 @@
  *
  * For conditions of distribution and use, see copyright notice in LICENSE
  */
-#include "OALWrapper/OAL_Types.h"
+#include "OALWrapper/OAL_Stream.h"
+#include "OALWrapper/OAL_Buffer.h"
 #include "OALWrapper/OAL_Device.h"
 #include "OALWrapper/OAL_Helper.h"
-#include "OALWrapper/OAL_Stream.h"
 #include "OALWrapper/OAL_Source.h"
-#include "OALWrapper/OAL_Buffer.h"
-
+#include "OALWrapper/OAL_Types.h"
 #include <cstdlib>
 
-//-----------------------------------------------------------------------------------
-
 unsigned int cOAL_Stream::mlBufferSize = STREAMING_BLOCK_SIZE;
-unsigned int cOAL_Stream::mlBufferCount = 4;
+unsigned int cOAL_Stream::mlBufferCount = 4u;
 
-//-----------------------------------------------------------------------------------
-
-cOAL_Stream::cOAL_Stream() : iOAL_AudioData(eOAL_AudioDataType_Stream, mlBufferCount), mpBoundSource(NULL)
+cOAL_Stream::cOAL_Stream() : iOAL_AudioData(eOAL_AudioDataType_Stream, mlBufferCount), mpBoundSource(nullptr)
 {
-	mpPCMBuffer = (char*)malloc(mlBufferSize*sizeof(char));
-	mvOALBufferIDs = (ALuint*)malloc(mlBufferCount*sizeof(ALuint));
-	for(int i=0;i<(int)mlBufferCount;++i)
-		mvOALBufferIDs[i] = mvBuffers[i]->GetObjectID();
+    mpPCMBuffer = (char*)malloc(mlBufferSize * sizeof(char));
+    mvOALBufferIDs = (ALuint*)malloc(mlBufferCount * sizeof(ALuint));
+    for (int i = 0; i < (int)mlBufferCount; ++i)
+        mvOALBufferIDs[i] = mvBuffers[i]->GetObjectID();
 
-	mfProcessedBuffersTime = 0;
+    mfProcessedBuffersTime = 0;
 }
 
 cOAL_Stream::~cOAL_Stream()
 {
-	if(mpBoundSource != NULL)
-		mpBoundSource->Stop();
+    if (mpBoundSource != nullptr)
+        mpBoundSource->Stop();
 
-	free(mpPCMBuffer);
-	free(mvOALBufferIDs);
+    free(mpPCMBuffer);
+    free(mvOALBufferIDs);
 }
 
 //-----------------------------------------------------------------------------------
 
 void cOAL_Stream::Update()
 {
-	if(mpBoundSource==NULL)
-		return;
+    if (mpBoundSource == nullptr)
+        return;
 
-	//unsigned long lTimeStart = hpl::cPlatform::GetApplicationTime();
-	//unsigned long lTimeToRebuffer = 0;
+    if (mbNeedsRebuffering)
+    {
+        bool bPlaying = mpBoundSource->mbPlaying;
+        bool bPaused = mpBoundSource->mbPaused;
+        mpBoundSource->LowLevelStop();
+        mlBuffersUsed = 0;
+        mfProcessedBuffersTime = GetTime();
+        int lQueuedBuffers = mpBoundSource->GetQueuedBuffers();
+        for (int i = 0; i < lQueuedBuffers; ++i)
+            mpBoundSource->Unqueue();
 
-	if(mbNeedsRebuffering)
-	{
-		bool bPlaying = mpBoundSource->mbPlaying;
-		bool bPaused = mpBoundSource->mbPaused;
-		mpBoundSource->LowLevelStop();
-		mlBuffersUsed=0;
-		mfProcessedBuffersTime=GetTime();
-		int lQueuedBuffers = mpBoundSource->GetQueuedBuffers();
-		for(int i=0;i<lQueuedBuffers;++i)
-			mpBoundSource->Unqueue();
+        for (int i = 0; i < (int)mvBuffers.size(); ++i)
+        {
+            cOAL_Buffer* pBuffer = mvBuffers[i];
+            if (Stream(pBuffer))
+            {
+                ++mlBuffersUsed;
+                mpBoundSource->Queue(pBuffer);
+            }
+        }
+        if (mlBuffersUsed != 0)
+            mbNeedsRebuffering = false;
+        if (bPlaying && bPaused == false)
+            mpBoundSource->LowLevelPlay();
+    }
 
-		for(int i=0;i<(int)mvBuffers.size();++i)
-		{
-			cOAL_Buffer* pBuffer = mvBuffers[i];
-			if(Stream(pBuffer))
-			{
-				++mlBuffersUsed;
-				mpBoundSource->Queue(pBuffer);
-			}
-		}
-		if(mlBuffersUsed!=0)
-			mbNeedsRebuffering = false;
-		if(bPlaying && bPaused==false)
-			mpBoundSource->LowLevelPlay();
+    if (mlBuffersUsed == 0)
+        return;
 
-		//lTimeToRebuffer = hpl::cPlatform::GetApplicationTime()-lTimeStart;
-		//hpl::Log("Stream rebuffering took %d ms\n", lTimeToRebuffer);
-	}
+    int lProcessedBuffers = mpBoundSource->GetProcessedBuffers();
+    // For every buffer that has been played, unqueue it, refill it with streamed data and enqueue it again
+    while (lProcessedBuffers)
+    {
+        // Then perform the actual streaming
+        cOAL_Buffer* pBuffer = mpBoundSource->Unqueue();
+        mfProcessedBuffersTime += pBuffer->GetBufferTime();
+        if (mfProcessedBuffersTime > mfTotalTime)
+            mfProcessedBuffersTime -= mfTotalTime;
 
-	if(mlBuffersUsed==0)
-		return;
-
-	int lProcessedBuffers = mpBoundSource->GetProcessedBuffers();
-	// For every buffer that has been played, unqueue it, refill it with streamed data and enqueue it again
-	while(lProcessedBuffers)
-	{
-		// Then perform the actual streaming
-		cOAL_Buffer* pBuffer = mpBoundSource->Unqueue();
-		mfProcessedBuffersTime += pBuffer->GetBufferTime();
-		if(mfProcessedBuffersTime > mfTotalTime)
-			mfProcessedBuffersTime-=mfTotalTime;
-		
-		if(Stream(pBuffer))
-		{
-			mpBoundSource->Queue(pBuffer);
-		}
-		else
-		{
-			if(mbEOF && (mbLoop || mpBoundSource->mbLoop))
-			{
-				Seek(0, false);
-				Stream(pBuffer);
-				mpBoundSource->Queue(pBuffer);
-			}
-		}
-		lProcessedBuffers--;
-	}
-	
-	//hpl::Log("Stream update took %d ms\n", hpl::cPlatform::GetApplicationTime()-(lTimeStart+lTimeToRebuffer));
-
+        if (Stream(pBuffer))
+        {
+            mpBoundSource->Queue(pBuffer);
+        }
+        else
+        {
+            if (mbEOF && (mbLoop || mpBoundSource->mbLoop))
+            {
+                Seek(0, false);
+                Stream(pBuffer);
+                mpBoundSource->Queue(pBuffer);
+            }
+        }
+        lProcessedBuffers--;
+    }
 }
 
 //-----------------------------------------------------------------------------------
@@ -122,66 +108,18 @@ void cOAL_Stream::DoBuffering()
 
 bool cOAL_Stream::HasBufferUnderrun()
 {
-	if(mpBoundSource==NULL)
-		return false;
+    if (mpBoundSource == nullptr)
+        return false;
 
-	if(mbEOF==false)
-	{
-		//hpl::Log("Have not reached end of file\n");
-		return true;
-	}
+    if (mbEOF == false)
+    {
+        return true;
+    }
 
-	if(mpBoundSource->GetQueuedBuffers() != mpBoundSource->GetProcessedBuffers())
-	{
-		//hpl::Log("Source still has %d buffers to play\n", mpBoundSource->GetQueuedBuffers());
-		return true;
-	}
+    if (mpBoundSource->GetQueuedBuffers() != mpBoundSource->GetProcessedBuffers())
+    {
+        return true;
+    }
 
-	return false;
+    return false;
 }
-
-//-----------------------------------------------------------------------------------
-/*
-void cOAL_Stream::Log( eOAL_LogVerbose aVerboseLevelReq, eOAL_LogMsg aMessageType, const char* asMessage, ...)
-{
-	if(asMessage == NULL)
-		return;
-	if(!mbLogEnabled)
-		return;
-
-	if(aVerboseLevelReq < mLogVerboseLevel)
-		return;
-
-	string sMessage;
-
-	char text[2048];
-	va_list ap;
-	va_start(ap, asMessage);
-	vsprintf(text, asMessage, ap);
-	va_end(ap);
-	char streamId[20];
-
-	sprintf(streamId, "Stream %s - ", msFilename.c_str());
-
-	switch(aMessageType)
-	{
-	case eOAL_LogMsg_Command:
-		sMessage.append("[COMMAND] ");
-		break;
-	case eOAL_LogMsg_Info:
-		sMessage.append("[INFO] ");
-		break;
-	case eOAL_LogMsg_Error:
-		sMessage.append("[ERROR] ");
-	default:
-		break;
-	}
-
-	sMessage.append(streamId).append(text);
-
-	Write(sMessage);
-
-}
-*/
-//-----------------------------------------------------------------------------------
-

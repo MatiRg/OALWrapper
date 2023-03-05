@@ -5,43 +5,35 @@
  *
  * For conditions of distribution and use, see copyright notice in LICENSE
  */
-#ifndef _OAL_BUFFER_H
-#define _OAL_BUFFER_H
-
-//----------------------------------------------------------------
-
-#include "OAL_Types.h"
-#include "OAL_LowLevelObject.h"
+#pragma once
 #include "OAL_AudioData.h"
+#include "OAL_LowLevelObject.h"
+#include "OAL_Types.h"
 
 class iOAL_AudioData;
-
-//----------------------------------------------------------------
 
 class cOAL_Buffer : public iOAL_LowLevelObject
 {
 public:
-	cOAL_Buffer(iOAL_AudioData* apParent);
-	~cOAL_Buffer();
+    cOAL_Buffer(iOAL_AudioData* apParent);
+    ~cOAL_Buffer();
 
-	////////////////////////////////////
-	// iOAL_LowLevelObject impl
-	bool CreateLowLevelID();
-	bool DestroyLowLevelID();
+    ////////////////////////////////////
+    // iOAL_LowLevelObject impl
+    bool CreateLowLevelID();
+    bool DestroyLowLevelID();
 
-	void SaveObjectState(){}
-	void RestoreObjectState(){}
+    void SaveObjectState() {}
+    void RestoreObjectState() {}
 
-	bool IsValidObject();
+    bool IsValidObject();
 
-    bool Feed(ALvoid* apPCMData, int alDataSize, double afStartTime=0.0);
-	double GetStartTime() { return mfStartTime; }
-	double GetBufferTime() { return mfBufferTime; }
+    bool Feed(ALvoid* apPCMData, int alDataSize, double afStartTime = 0.0);
+    double GetStartTime() { return mfStartTime; }
+    double GetBufferTime() { return mfBufferTime; }
 
 protected:
-	iOAL_AudioData* mpParent;
-	double mfStartTime;
-	double mfBufferTime;
+    iOAL_AudioData* mpParent;
+    double mfStartTime;
+    double mfBufferTime;
 };
-
-#endif // _OAL_BUFFER_H

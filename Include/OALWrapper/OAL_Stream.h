@@ -5,64 +5,71 @@
  *
  * For conditions of distribution and use, see copyright notice in LICENSE
  */
-#ifndef _OAL_STREAM_H
-#define _OAL_STREAM_H
-
+#pragma once
 #include "OAL_AudioData.h"
-
-//-----------------------------------------------------------------------------------
 
 class cOAL_Stream : public iOAL_AudioData
 {
 public:
+    cOAL_Stream();
+    virtual ~cOAL_Stream();
 
-	cOAL_Stream();
-	virtual ~cOAL_Stream();
+    /////////////////////////////////////
 
-	/////////////////////////////////////
+    void AddBoundSource(cOAL_Source* apSource)
+    {
+        if (apSource)
+            mpBoundSource = apSource;
+    }
+    void RemoveBoundSource(cOAL_Source* apSource)
+    {
+        if (apSource && (apSource == mpBoundSource))
+            mpBoundSource = nullptr;
+    }
 
-	void AddBoundSource(cOAL_Source* apSource) { if(apSource) mpBoundSource = apSource; }
-	void RemoveBoundSource(cOAL_Source* apSource) { if(apSource && (apSource == mpBoundSource)) mpBoundSource = NULL; }
+    void Update();
 
-	void Update();
+    void DoBuffering();
 
-	void DoBuffering();
+    virtual void Seek(float afWhere, bool abForceRebuffer = true) = 0;
+    virtual double GetTime() = 0;
 
-	virtual void Seek(float afWhere, bool abForceRebuffer=true)=0;
-	virtual double GetTime()=0;
+    inline bool IsLocked() { return mpBoundSource != nullptr; }
 
-	inline bool IsLocked() { return mpBoundSource != NULL; }
+    // Streaming Config stuff
+    static void SetBufferCount(unsigned int alBufferCount)
+    {
+        if (alBufferCount >= 1)
+            mlBufferCount = alBufferCount;
+    }
+    static void SetBufferSize(unsigned int alBufferSize)
+    {
+        if (alBufferSize >= STREAMING_BLOCK_SIZE)
+            mlBufferSize = alBufferSize;
+    }
 
-	// Streaming Config stuff
-	static inline void SetBufferCount(unsigned int alBufferCount)	{ if(alBufferCount >= 1) mlBufferCount = alBufferCount; } 
-	static inline void SetBufferSize(unsigned int alBufferSize)		{ if(alBufferSize >= STREAMING_BLOCK_SIZE) mlBufferSize = alBufferSize; }
-	
-	static inline unsigned int GetBufferSize()			{ return mlBufferSize; }
-	static inline unsigned int GetBufferCount()			{ return mlBufferCount; }
+    static unsigned int GetBufferSize() { return mlBufferSize; }
+    static unsigned int GetBufferCount() { return mlBufferCount; }
 
-	ALuint* GetOALBufferPointer() { return mvOALBufferIDs; }
+    ALuint* GetOALBufferPointer() { return mvOALBufferIDs; }
 
-	double GetProcessedBuffersTime() { return mfProcessedBuffersTime; }
+    double GetProcessedBuffersTime() { return mfProcessedBuffersTime; }
 
-	bool HasBufferUnderrun();
-	bool NeedsRebuffering() { return mbNeedsRebuffering; }
+    bool HasBufferUnderrun();
+    bool NeedsRebuffering() { return mbNeedsRebuffering; }
 
 protected:
-	virtual bool Stream(cOAL_Buffer* apDestBuffer)=0;
+    virtual bool Stream(cOAL_Buffer* apDestBuffer) = 0;
 
-	cOAL_Source* mpBoundSource;
+    cOAL_Source* mpBoundSource;
 
-	static unsigned int mlBufferCount;
-	static unsigned int mlBufferSize;
+    static unsigned int mlBufferCount;
+    static unsigned int mlBufferSize;
 
-	bool mbNeedsRebuffering;
+    bool mbNeedsRebuffering;
 
-	double mfProcessedBuffersTime;
+    double mfProcessedBuffersTime;
 
-	char* mpPCMBuffer;
-	ALuint* mvOALBufferIDs;
+    char* mpPCMBuffer;
+    ALuint* mvOALBufferIDs;
 };
-
-//-----------------------------------------------------------------------------------
-
-#endif // _OAL_STREAM_H
