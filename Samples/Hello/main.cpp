@@ -3,9 +3,39 @@
 #include <OALWrapper/OAL_Sample.h>
 #include <iostream>
 
+class cOAL_LoggerSink: public iOAL_LoggerSink
+{
+public:
+    void Write(eOAL_LogMsg Type, const std::string& Message) override
+    {
+        std::string TypeStr;
+        switch(Type)
+        {
+        case eOAL_LogMsg_Command:
+            TypeStr = "[COMMAND] ";
+            break;
+        case eOAL_LogMsg_Info:
+            TypeStr = "[INFO] ";
+            break;
+        case eOAL_LogMsg_Error:
+            TypeStr = "[ERROR] ";
+            break;
+        case eOAL_LogMsg_Text:
+            [[fallthrough]];
+        case eOAL_LogMsg_Default:
+            [[fallthrough]];
+        default:
+            break;
+        }
+        std::cout << TypeStr << Message;
+    }
+};
+
 int main(int, char*[])
 {
-    OAL_SetupLogging(true, eOAL_LogOutput_File, eOAL_LogVerbose_High);
+    cOAL_LoggerSink LogSink;
+    OAL_SetupLogging(true, &LogSink, eOAL_LogVerbose_High);
+
     cOAL_Init_Params OALInitParams;
     if( !OAL_Init(OALInitParams) )
     {
@@ -31,8 +61,8 @@ int main(int, char*[])
     }
     OAL_Sample_Unload(Sample1);
     OAL_Stream_Unload(Stream1);
-
     //
     OAL_Close();
+    //
     return 0;
 }

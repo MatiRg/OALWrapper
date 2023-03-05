@@ -251,7 +251,6 @@ void cOAL_Source::LowLevelPlay()
 
     if (!IsValidObject())
     {
-        // OAL_Source_Log(mlId,2,"Invalid source name:%d\n", mlSource);
         return;
     }
     if (mpAudioData == nullptr)
@@ -269,7 +268,6 @@ void cOAL_Source::LowLevelStop()
 
     if (!IsValidObject())
     {
-        // OAL_Source_Log(mlId,2,"Invalid source name:%d\n", mlSource);
         return;
     }
 
@@ -286,13 +284,10 @@ void cOAL_Source::LowLevelPause()
 
     if (!IsValidObject())
     {
-        // OAL_Source_Log(mlId,2,"Invalid source name:%d\n", mlSource);
         return;
     }
 
     RUN_AL_FUNC(alSourcePause(mlObjectId));
-
-    // OAL_Source_Log(mlId,0,"LowLevelPause() - status:%s\n",GetDebugInfo().c_str() );
 }
 
 //--------------------------------------------------------------------------------
@@ -304,7 +299,6 @@ bool cOAL_Source::LowLevelSet(eOAL_SourceParam aParam)
 
     if (IsValidObject() == false)
     {
-        // OAL_Source_Log(mlId,2,"Invalid source name:%d\n", mlSource);
         return false;
     }
 
@@ -543,7 +537,6 @@ void cOAL_Source::Update()
     // If the source had a buffer underrun (this means it ran out of data and stopped), tell it to continue playing
     if (sourceStatus == eOAL_SourceStatus_Busy_BufferUnderrun)
     {
-        // OAL_Source_Log(mlObjectId, 1,"Buffer underrun occured");
         LowLevelPlay();
     }
 }

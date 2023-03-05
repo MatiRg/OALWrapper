@@ -87,7 +87,3 @@ int OAL_Info_GetStreamBufferCount();
 int OAL_Info_GetStreamBufferSize();
 std::string OAL_Info_GetDefaultOutputDevice();
 std::vector<std::string> OAL_Info_GetOutputDevices();
-
-void OAL_LogSourcePoolStatus();
-void OAL_SetupLogging(bool abLogSounds, eOAL_LogOutput aeOutput = eOAL_LogOutput_File, eOAL_LogVerbose aVerbose = eOAL_LogVerbose_Low, std::string asLogFilename = "OAL.Log");
-void OAL_Log(eOAL_LogVerbose aVerboseLevelReq, eOAL_LogMsg aMsg, const char* asMessage, ...);

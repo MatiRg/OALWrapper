@@ -6,72 +6,18 @@
  * For conditions of distribution and use, see copyright notice in LICENSE
  */
 /**
-	@file OAL_Playback.h
-	@author Luis Rodero
-	@date 2006-10-02
-	@version 0.1
-	Set of functions to manage playback and such in OpenAL
+    @file OAL_Playback.h
+    @author Luis Rodero
+    @date 2006-10-02
+    @version 0.1
+    Set of functions to manage playback and such in OpenAL
 */
-#include "OALWrapper/OAL_Types.h"
 #include "OALWrapper/OAL_Playback.h"
-#include "OALWrapper/OAL_Source.h"
 #include "OALWrapper/OAL_Device.h"
+#include "OALWrapper/OAL_Source.h"
+#include "OALWrapper/OAL_Types.h"
 
 extern cOAL_Device* gpDevice;
-
-using namespace std;
-
-//////////////////////////////////////////////////////////////////
-////	OAL_Test_Sample_Play ( const cOAL_Sample* apSample )
-////	- Plays a loaded Sample and waits till it ends playing
-//////////////////////////////////////////////////////////////////
-
-void OAL_Test_Sample_Play ( cOAL_Sample* )
-{
-	/*
-	if ( apSample )
-	{
-		cOAL_Source* pTmpSource;
-		int lSampleState = 0;
-
-		pTmpSource = (*gpSourceList)[0];
-
-		pTmpSource->PlaySample( apSample, false, 1.0f );
-		while (pTmpSource->GetSourceStatus() == eOALSourceStatus_Busy_Playing )
-		{}
-	}
-	*/
-}
-
-
-//////////////////////////////////////////////////////////////////
-////	OAL_Test_Stream_Play ( cOAL_Sample* apStream )
-////	- Plays a Stream and waits till it ends playing
-//////////////////////////////////////////////////////////////////
-
-void OAL_Test_Stream_Play ( cOAL_Stream* )
-{
-	/*
-	if ( apStream )
-	{
-		cOAL_Source* pTempSource;
-		int lStreamState = 0;
-
-		OAL_Source_Stop ( OAL_ALL );
-
-		pTempSource = (*gpSourceList)[0];
-
-		pTempSource->PlayStream( apStream, false, 1.0f );
-
-		while (pTempSource->GetSourceStatus() == eOALSourceStatus_Busy_Playing )
-		{
-			pTempSource->Update();
-		}
-
-	}
-	*/
-}
-
 
 //////////////////////////////////////////////////////////////////
 ////	int OAL_Sample_Play ( int alSource, const cOAL_Sample* apSample )
@@ -80,11 +26,12 @@ void OAL_Test_Stream_Play ( cOAL_Stream* )
 ////		priority below the sample's own prio
 //////////////////////////////////////////////////////////////////
 
-int OAL_Sample_Play (	int alSource, cOAL_Sample* apSample, float afVolume, bool abStartPaused,
-						int alPriority)
+int OAL_Sample_Play(int alSource, cOAL_Sample* apSample, float afVolume, bool abStartPaused,
+                    int alPriority)
 {
-	if (gpDevice == NULL) return -1;
-	return gpDevice->PlaySample(alSource, apSample,alPriority,afVolume,abStartPaused);
+    if (gpDevice == nullptr)
+        return -1;
+    return gpDevice->PlaySample(alSource, apSample, alPriority, afVolume, abStartPaused);
 }
 
 //////////////////////////////////////////////////////////////////
@@ -93,10 +40,32 @@ int OAL_Sample_Play (	int alSource, cOAL_Sample* apSample, float afVolume, bool 
 ////		it looks for a free source if there is any, if not, it selects the source with lowest prio
 //////////////////////////////////////////////////////////////////
 
-int OAL_Stream_Play ( int alSource, cOAL_Stream* apStream, float afVolume, bool abStartPaused )
+int OAL_Stream_Play(int alSource, cOAL_Stream* apStream, float afVolume, bool abStartPaused)
 {
-	if (gpDevice == NULL) return -1;
-	return gpDevice->PlayStream(alSource, apStream,afVolume,abStartPaused);
+    if (gpDevice == nullptr)
+        return -1;
+    return gpDevice->PlayStream(alSource, apStream, afVolume, abStartPaused);
+}
+
+void OAL_Source_Stop_All()
+{
+    if (gpDevice == nullptr)
+    {
+        return;
+    }
+	if (gpDevice->GetSourceManager() == nullptr)
+    {
+        return;
+    }
+	for(const auto& i: gpDevice->GetSourceManager()->GetSources())
+	{
+		if (i)
+		{
+			i->Lock();
+			i->Stop();
+			i->Unlock();
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////
@@ -104,51 +73,53 @@ int OAL_Stream_Play ( int alSource, cOAL_Stream* apStream, float afVolume, bool 
 ////	-	Stops the specified source.
 //////////////////////////////////////////////////////////////////
 
-void OAL_Source_Stop ( int alSource )
+void OAL_Source_Stop(int alSource)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
 
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->Stop();
-		pSource->Unlock();
-	}
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->Stop();
+        pSource->Unlock();
+    }
 }
 
 ///////////////////////////////////////////////////////////
-////	void OAL_Source_SetVolume ( int alSource, float afVolume )
+////	void OAL_Source_SetGain ( int alSource, float afVolume )
 ////	-	Sets the volume for the specified Source
 ///////////////////////////////////////////////////////////
 
-void OAL_Source_SetGain ( int alSource, float afVolume )
+void OAL_Source_SetGain(int alSource, float afVolume)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetGain(afVolume);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetGain(afVolume);
+        pSource->Unlock();
+    }
 }
 //////////////////////////////////////////////////////////////////
 ////	void OAL_Source_SetPitch ( int alSource, const float afPitch )
 ////	-	Sets pitch value for specified source
 //////////////////////////////////////////////////////////////////
 
-void OAL_Source_SetPitch ( int alSource, float afPitch )
+void OAL_Source_SetPitch(int alSource, float afPitch)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetPitch(afPitch);
-		pSource->Unlock();
-	}
-
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetPitch(afPitch);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -156,16 +127,17 @@ void OAL_Source_SetPitch ( int alSource, float afPitch )
 ////	-	Pauses the specified source.
 //////////////////////////////////////////////////////////////////
 
-void OAL_Source_SetPaused ( int alSource, bool abPaused )
+void OAL_Source_SetPaused(int alSource, bool abPaused)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->Pause(abPaused);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->Pause(abPaused);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -173,16 +145,17 @@ void OAL_Source_SetPaused ( int alSource, bool abPaused )
 ////	-	Pauses the specified source.
 //////////////////////////////////////////////////////////////////
 
-void OAL_Source_SetLoop ( int alSource, bool abLoop )
+void OAL_Source_SetLoop(int alSource, bool abLoop)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetLoop(abLoop);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetLoop(abLoop);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -192,14 +165,15 @@ void OAL_Source_SetLoop ( int alSource, bool abLoop )
 
 void OAL_Source_SetPosition(const int alSource, const float* apPos)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetPosition(apPos);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetPosition(apPos);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -209,14 +183,15 @@ void OAL_Source_SetPosition(const int alSource, const float* apPos)
 
 void OAL_Source_SetVelocity(const int alSource, const float* apVel)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetVelocity(apVel);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetVelocity(apVel);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -224,17 +199,18 @@ void OAL_Source_SetVelocity(const int alSource, const float* apVel)
 ////	-	Sets 3D audio attributes for the specified source.
 //////////////////////////////////////////////////////////////////
 
-void OAL_Source_SetAttributes ( const int alSource, const float* apPos, const float* apVel )
+void OAL_Source_SetAttributes(const int alSource, const float* apPos, const float* apVel)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetPosition(apPos);
-		pSource->SetVelocity(apVel);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetPosition(apPos);
+        pSource->SetVelocity(apVel);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -242,16 +218,17 @@ void OAL_Source_SetAttributes ( const int alSource, const float* apPos, const fl
 ////	-	Sets min and max distance values for the specified source.
 //////////////////////////////////////////////////////////////////
 
-void OAL_Source_SetMinMaxDistance ( const int alSource, const float afMin, const float afMax )
+void OAL_Source_SetMinMaxDistance(const int alSource, const float afMin, const float afMax)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetMinMaxDistance(afMin, afMax);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetMinMaxDistance(afMin, afMax);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -259,16 +236,17 @@ void OAL_Source_SetMinMaxDistance ( const int alSource, const float afMin, const
 ////	-	Sets if the specified source should use coordinates relative to the Listener.
 //////////////////////////////////////////////////////////////////
 
-void OAL_Source_SetPositionRelative ( const int alSource, const bool abRelative )
+void OAL_Source_SetPositionRelative(const int alSource, const bool abRelative)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetPositionRelative(abRelative);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetPositionRelative(abRelative);
+        pSource->Unlock();
+    }
 }
 
 //////////////////////////////////////////////////////////////////
@@ -276,12 +254,16 @@ void OAL_Source_SetPositionRelative ( const int alSource, const bool abRelative 
 ////	-	Sets 3D audio attributes for the listener.
 //////////////////////////////////////////////////////////////////
 
-void OAL_Listener_SetAttributes ( const float* apPos, const float* apVel, const float* apForward, const float* apUp )
+void OAL_Listener_SetAttributes(const float* apPos, const float* apVel, const float* apForward, const float* apUp)
 {
-	if (gpDevice == NULL) return;
-    if (apPos) gpDevice->SetListenerPosition(apPos);
-	if (apVel) gpDevice->SetListenerVelocity(apVel);
-	if (apForward && apUp) gpDevice->SetListenerOrientation(apForward, apUp);
+    if (gpDevice == nullptr)
+        return;
+    if (apPos)
+        gpDevice->SetListenerPosition(apPos);
+    if (apVel)
+        gpDevice->SetListenerVelocity(apVel);
+    if (apForward && apUp)
+        gpDevice->SetListenerOrientation(apForward, apUp);
 }
 
 ///////////////////////////////////////////////////////////
@@ -289,10 +271,11 @@ void OAL_Listener_SetAttributes ( const float* apPos, const float* apVel, const 
 ////	-	Sets the master volume
 ///////////////////////////////////////////////////////////
 
-void OAL_Listener_SetMasterVolume ( float afVolume )
+void OAL_Listener_SetMasterVolume(float afVolume)
 {
-	if (gpDevice == NULL) return;
-	gpDevice->SetListenerGain(afVolume);
+    if (gpDevice == nullptr)
+        return;
+    gpDevice->SetListenerGain(afVolume);
 }
 
 ///////////////////////////////////////////////////////////
@@ -300,16 +283,17 @@ void OAL_Listener_SetMasterVolume ( float afVolume )
 ////	-	Sets the priority of the specified source
 ///////////////////////////////////////////////////////////
 
-void OAL_Source_SetPriority ( const int alSource, const unsigned int alPriority )
+void OAL_Source_SetPriority(const int alSource, const unsigned int alPriority)
 {
-	if (gpDevice == NULL) return;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetPriority(alPriority);
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetPriority(alPriority);
+        pSource->Unlock();
+    }
 }
 
 ///////////////////////////////////////////////////////////
@@ -317,20 +301,20 @@ void OAL_Source_SetPriority ( const int alSource, const unsigned int alPriority 
 ////	-	Returns the source priority
 ///////////////////////////////////////////////////////////
 
-unsigned int OAL_Source_GetPriority ( const int alSource )
+unsigned int OAL_Source_GetPriority(const int alSource)
 {
-	if (gpDevice == NULL) return 0;
-	int lPriority = 0;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		lPriority = pSource->GetPriority();
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return 0;
+    int lPriority = 0;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        lPriority = pSource->GetPriority();
+        pSource->Unlock();
+    }
 
-	return lPriority;
-
+    return lPriority;
 }
 
 ///////////////////////////////////////////////////////////
@@ -338,149 +322,101 @@ unsigned int OAL_Source_GetPriority ( const int alSource )
 ////	-	Returns true if the specified source is playing audio
 ///////////////////////////////////////////////////////////
 
-bool	OAL_Source_IsPlaying ( const int alSource )
+bool OAL_Source_IsPlaying(const int alSource)
 {
-	if (gpDevice == NULL) return false;
-	bool bIsPlaying = false;
+    if (gpDevice == nullptr)
+        return false;
+    bool bIsPlaying = false;
 
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		eOAL_SourceStatus eStatus = pSource->GetSourceStatus();
-		pSource->Unlock();
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        eOAL_SourceStatus eStatus = pSource->GetSourceStatus();
+        pSource->Unlock();
 
-		bIsPlaying = (eStatus != eOAL_SourceStatus_Free);
-	}
-	return bIsPlaying;
+        bIsPlaying = (eStatus != eOAL_SourceStatus_Free);
+    }
+    return bIsPlaying;
 }
 
-
-bool	OAL_Source_IsBufferUnderrun ( const int )
+bool OAL_Source_IsBufferUnderrun(const int)
 {
-	return false;
+    return false;
 }
 
-
-void	OAL_Source_SetElapsedTime( const int alSource, double afTime )
+void OAL_Source_SetElapsedTime(const int alSource, double afTime)
 {
-	if (gpDevice == NULL) return;
+    if (gpDevice == nullptr)
+        return;
 
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		pSource->SetElapsedTime(afTime);
-		pSource->Unlock();
-	}
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetElapsedTime(afTime);
+        pSource->Unlock();
+    }
 }
 
-double	OAL_Source_GetElapsedTime( const int alSource )
+double OAL_Source_GetElapsedTime(const int alSource)
 {
-	if (gpDevice == NULL) return 0;
-	double fElapsedTime = 0;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		fElapsedTime = pSource->GetElapsedTime();
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return 0;
+    double fElapsedTime = 0;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        fElapsedTime = pSource->GetElapsedTime();
+        pSource->Unlock();
+    }
 
-	return fElapsedTime;
+    return fElapsedTime;
 }
 
-double	OAL_Source_GetTotalTime( const int alSource )
+double OAL_Source_GetTotalTime(const int alSource)
 {
-	if (gpDevice == NULL) return 0;
-	double fTotalTime = 0;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		fTotalTime = pSource->GetTotalTime();
-		pSource->Unlock();
-	}
+    if (gpDevice == nullptr)
+        return 0;
+    double fTotalTime = 0;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        fTotalTime = pSource->GetTotalTime();
+        pSource->Unlock();
+    }
 
-	return fTotalTime;
+    return fTotalTime;
 }
 
-float OAL_Source_GetGain( const int alSource )
+float OAL_Source_GetGain(const int alSource)
 {
-	if (gpDevice == NULL) return 0;
-	float fGain = 0.0f;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		fGain = pSource->GetGain();
-		pSource->Unlock();
-	}
-	return fGain;
+    if (gpDevice == nullptr)
+        return 0;
+    float fGain = 0.0f;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        fGain = pSource->GetGain();
+        pSource->Unlock();
+    }
+    return fGain;
 }
 
-float OAL_Source_GetPitch( const int alSource )
+float OAL_Source_GetPitch(const int alSource)
 {
-	if (gpDevice == NULL) return 0;
-	float fPitch = 0.0f;
-	cOAL_Source* pSource = gpDevice->GetSource(alSource);
-	if (pSource)
-	{
-		pSource->Lock();
-		fPitch = pSource->GetPitch();
-		pSource->Unlock();
-	}
-	return fPitch;
-}
-
-void OAL_Source_Log ( int, int,  const char*, ... )
-{
-	/*
-	if (!gbLogSounds)
-		return;
-	if ( !IsValidSourceId (alSourceId))
-		return;
-
-	string sMessage;
-
-	switch ( alMessageType )
-	{
-	case 0:
-		sMessage.append("[COMMAND] ");
-		break;
-	case 1:
-		sMessage.append("[INFO] ");
-		break;
-	case 2:
-		sMessage.append("[ERROR] ");
-	default:
-		break;
-	}
-
-	char text[2048];
-	va_list ap;
-	if (asMessage == NULL)
-		return;
-	va_start(ap, asMessage);
-	vsprintf(text, asMessage, ap);
-	va_end(ap);
-
-	sMessage.append(text);
-
-	string sMess = "";
-	sMess += text;
-
-	char sBuffer[255];
-
-	sprintf(sBuffer, "./OAL/OAL_Source_%d.log", alSourceId);
-    string sFileName(sBuffer);
-
-    FILE* fSourceLog = OpenFile(sFileName,"a");
-
-	if (fSourceLog != NULL)
-	{
-		fwrite(sMessage.c_str(), sizeof(char), sMessage.size(), fSourceLog);
-		fclose(fSourceLog);
-	}
-	*/
+    if (gpDevice == nullptr)
+        return 0;
+    float fPitch = 0.0f;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        fPitch = pSource->GetPitch();
+        pSource->Unlock();
+    }
+    return fPitch;
 }

@@ -26,11 +26,13 @@ enum eOAL_LogVerbose
     eOAL_LogVerbose_Default,
 };
 
-enum eOAL_LogOutput
+class iOAL_LoggerSink
 {
-    eOAL_LogOutput_File,
-    eOAL_LogOutput_Console,
-    eOAL_LogOutput_Default,
+public:
+    iOAL_LoggerSink() = default;
+    virtual ~iOAL_LoggerSink() = default;
+
+	virtual void Write(eOAL_LogMsg aType, const std::string& asMessage) = 0;
 };
 
 class iOAL_LoggerObject
@@ -41,21 +43,20 @@ public:
 
     static void LogMsg(const std::string& asIDStr, eOAL_LogVerbose aVerbose, eOAL_LogMsg aType, const char* asMessage, ...);
 
-    static void Write(const std::string& asMessage);
+    static void Write(eOAL_LogMsg aType, const std::string& asMessage);
 
     static void SetLogEnabled(bool abEnable) { mbLogEnabled = abEnable; }
-    static void SetLogOutput(eOAL_LogOutput aOutput) { mLogOutput = aOutput; }
     static void SetLogVerbose(eOAL_LogVerbose aLevel) { mLogVerboseLevel = aLevel; }
-    static void SetLogFilename(const std::string& asLogFilename);
+	static void SetLogSink(iOAL_LoggerSink* apLogSink) { mpLogSink = apLogSink; }
 
     static bool IsLogEnabled() { return mbLogEnabled; }
-    static eOAL_LogOutput GetLogOutput() { return mLogOutput; }
     static eOAL_LogVerbose GetLogVerboseLevel() { return mLogVerboseLevel; }
-    static std::wstring GetLogFilename() { return msLogFile; }
-
+	static iOAL_LoggerSink* GetLogSink() { return mpLogSink; }
 protected:
     static bool mbLogEnabled;
-    static eOAL_LogOutput mLogOutput;
     static eOAL_LogVerbose mLogVerboseLevel;
-    static std::wstring msLogFile;
+	static iOAL_LoggerSink* mpLogSink;
 };
+
+void OAL_SetupLogging(bool abLogSounds, iOAL_LoggerSink* apLogSink, eOAL_LogVerbose aVerbose = eOAL_LogVerbose_Low);
+void OAL_Log(eOAL_LogVerbose aVerboseLevelReq, eOAL_LogMsg aMsg, const char* asMessage, ...);

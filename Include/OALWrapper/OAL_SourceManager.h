@@ -49,6 +49,7 @@ public:
 
     int GetNumVoices() { return mlNumOfVoices; }
 
+	const tSourceVec& GetSources() const { return mvSources; }
 private:
     void LockStreamList();
     void UnlockStreamList();

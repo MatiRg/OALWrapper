@@ -14,19 +14,8 @@
 #include <locale>
 
 bool iOAL_LoggerObject::mbLogEnabled = false;
-eOAL_LogOutput iOAL_LoggerObject::mLogOutput = eOAL_LogOutput_File;
 eOAL_LogVerbose iOAL_LoggerObject::mLogVerboseLevel = eOAL_LogVerbose_Low;
-std::wstring iOAL_LoggerObject::msLogFile = L"OAL.log";
-
-//---------------------------------------------------------------------------------------
-
-void iOAL_LoggerObject::SetLogFilename(const std::string& asLogFilename)
-{
-    std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-    msLogFile = myconv.from_bytes(asLogFilename);
-}
-
-//---------------------------------------------------------------------------------------
+iOAL_LoggerSink* iOAL_LoggerObject::mpLogSink = nullptr;
 
 void iOAL_LoggerObject::LogMsg(const std::string& asIDStr, eOAL_LogVerbose aVerbose, eOAL_LogMsg aType, const char* asMessage, ...)
 {
@@ -34,7 +23,6 @@ void iOAL_LoggerObject::LogMsg(const std::string& asIDStr, eOAL_LogVerbose aVerb
         return;
     if (mLogVerboseLevel < aVerbose)
         return;
-
     if (!asMessage)
         return;
 
@@ -46,53 +34,51 @@ void iOAL_LoggerObject::LogMsg(const std::string& asIDStr, eOAL_LogVerbose aVerb
     vsprintf(text, asMessage, ap);
     va_end(ap);
 
-    switch (aType)
-    {
-    case eOAL_LogMsg_Command:
-        sMessage.append("[COMMAND] ");
-        break;
-    case eOAL_LogMsg_Info:
-        sMessage.append("[INFO] ");
-        break;
-    case eOAL_LogMsg_Error:
-        sMessage.append("[ERROR] ");
-        break;
-    case eOAL_LogMsg_Text:
-        [[fallthrough]];
-    case eOAL_LogMsg_Default:
-        [[fallthrough]];
-    default:
-        break;
-    }
-
     sMessage.append(asIDStr.c_str()).append(text);
-
-    Write(sMessage);
+    Write(aType, sMessage);
 }
 
 //---------------------------------------------------------------------------------------
 
-void iOAL_LoggerObject::Write(const std::string& asMessage)
+void iOAL_LoggerObject::Write(eOAL_LogMsg aType, const std::string& asMessage)
 {
     if (!mbLogEnabled)
+    {
+        return;
+    }
+
+	if(mpLogSink && !asMessage.empty())
+	{
+		mpLogSink->Write(aType, asMessage);
+	}
+}
+
+//
+
+void OAL_SetupLogging(bool abLogSounds, iOAL_LoggerSink* apLogSink, eOAL_LogVerbose aeVerboseLevel)
+{
+    iOAL_LoggerObject::SetLogEnabled(abLogSounds);
+    iOAL_LoggerObject::SetLogVerbose(aeVerboseLevel);
+	iOAL_LoggerObject::SetLogSink(apLogSink);
+}
+
+void OAL_Log(eOAL_LogVerbose aeVerboseLevelReq, eOAL_LogMsg aeMessageType, const char* asMessage, ...)
+{
+    if ( !asMessage )
+        return;
+    if (!iOAL_LoggerObject::IsLogEnabled())
+        return;
+    if (iOAL_LoggerObject::GetLogVerboseLevel() < aeVerboseLevelReq)
         return;
 
-    FILE* fLog = nullptr;
+    std::string sMessage;
 
-    switch (mLogOutput)
-    {
-    case eOAL_LogOutput_File:
-        fLog = OpenFileW(msLogFile, L"a");
-        if ( fLog )
-        {
-            fwrite(asMessage.c_str(), sizeof(char), asMessage.size(), fLog);
-            fclose(fLog);
-        }
-        break;
-    case eOAL_LogOutput_Console:
-        printf("%s", asMessage.c_str());
-        break;
-    default:
-        break;
-    }
+    char text[2048];
+    va_list ap;
+    va_start(ap, asMessage);
+    vsprintf(text, asMessage, ap);
+    va_end(ap);
+
+    sMessage.append(text);
+    iOAL_LoggerObject::Write(aeMessageType, sMessage);
 }

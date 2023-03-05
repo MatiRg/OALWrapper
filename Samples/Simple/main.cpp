@@ -3,8 +3,37 @@
 
 #include <string>
 #include <cstdlib>
+#include <iostream>
 
 using namespace std;
+
+class cOAL_LoggerSink: public iOAL_LoggerSink
+{
+public:
+    void Write(eOAL_LogMsg Type, const std::string& Message) override
+    {
+        std::string TypeStr;
+        switch(Type)
+        {
+        case eOAL_LogMsg_Command:
+            TypeStr = "[COMMAND] ";
+            break;
+        case eOAL_LogMsg_Info:
+            TypeStr = "[INFO] ";
+            break;
+        case eOAL_LogMsg_Error:
+            TypeStr = "[ERROR] ";
+            break;
+        case eOAL_LogMsg_Text:
+            [[fallthrough]];
+        case eOAL_LogMsg_Default:
+            [[fallthrough]];
+        default:
+            break;
+        }
+        std::cout << TypeStr << Message;
+    }
+};
 
 int main (int argc, char *argv[])
 {
@@ -29,7 +58,9 @@ int main (int argc, char *argv[])
 
     printf ("Initializing OpenAL... ");
     fflush(stdout);
-    OAL_SetupLogging(true,eOAL_LogOutput_File,eOAL_LogVerbose_High);
+    
+    cOAL_LoggerSink logSink;
+    OAL_SetupLogging(true,&logSink,eOAL_LogVerbose_High);
     
     cOAL_Init_Params oal_parms;
     oal_parms.mlStreamingBufferSize = 8192;
@@ -67,7 +98,7 @@ int main (int argc, char *argv[])
         printf("Playing Secondary Stream...\n");
         printf("\tChannels : %d\n\tFrequency : %d\n", pStream2->GetChannels(), pStream2->GetFrequency() );
 
-		OAL_Source_Stop ( OAL_ALL );
+		OAL_Source_Stop_All();
 
         int s1 = OAL_Stream_Play ( OAL_FREE, pStream, 1.0f, false );
         int s2 = OAL_Stream_Play ( OAL_FREE, pStream2, 1.0f, false );

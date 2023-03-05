@@ -17,6 +17,7 @@
 #include "OALWrapper/OAL_SourceManager.h"
 #include "OALWrapper/OAL_Stream.h"
 #include "OALWrapper/OAL_Types.h"
+#include "OALWrapper/OAL_Playback.h"
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -56,7 +57,7 @@ void OAL_Close()
 
     gpDevice->SetListenerGain(0.0f);
 
-    //    OAL_Source_Stop ( OAL_ALL );
+    OAL_Source_Stop_All();
 
     gpDevice->Close();
     delete gpDevice;
@@ -120,56 +121,6 @@ void OAL_SetDistanceModel(eOAL_DistanceModel aeModel)
 //
 //
 ///////////////////////////////////////////////////////////
-/*
- */
-void OAL_LogSourcePoolStatus()
-{
-}
-
-void OAL_SetupLogging(bool abLogSounds, eOAL_LogOutput aeOutput, eOAL_LogVerbose aeVerboseLevel, std::string asLogFilename)
-{
-    iOAL_LoggerObject::SetLogEnabled(abLogSounds);
-    iOAL_LoggerObject::SetLogOutput(aeOutput);
-    iOAL_LoggerObject::SetLogVerbose(aeVerboseLevel);
-    iOAL_LoggerObject::SetLogFilename(asLogFilename);
-}
-
-void OAL_Log(eOAL_LogVerbose aeVerboseLevelReq, eOAL_LogMsg aeMessageType, const char* asMessage, ...)
-{
-    if (asMessage == nullptr)
-        return;
-    if (!iOAL_LoggerObject::IsLogEnabled())
-        return;
-
-    if (iOAL_LoggerObject::GetLogVerboseLevel() < aeVerboseLevelReq)
-        return;
-
-    std::string sMessage;
-
-    char text[2048];
-    va_list ap;
-    va_start(ap, asMessage);
-    vsprintf(text, asMessage, ap);
-    va_end(ap);
-
-    switch (aeMessageType)
-    {
-    case eOAL_LogMsg_Command:
-        sMessage.append("[COMMAND] ");
-        break;
-    case eOAL_LogMsg_Info:
-        sMessage.append("[INFO] ");
-        break;
-    case eOAL_LogMsg_Error:
-        sMessage.append("[ERROR] ");
-    default:
-        break;
-    }
-
-    sMessage.append(text);
-
-    iOAL_LoggerObject::Write(sMessage);
-}
 
 const char* OAL_Info_GetDeviceName()
 {
