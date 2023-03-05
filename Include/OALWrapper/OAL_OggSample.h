@@ -15,13 +15,13 @@
 #pragma once
 #include "OAL_Sample.h"
 
-struct OggVorbis_File;
+struct stb_vorbis;
 
 class cOAL_OggSample : public cOAL_Sample
 {
 public:
     bool CreateFromFile(const std::wstring& asFilename);
     bool CreateFromBuffer(const void* apBuffer, size_t aSize);
-private:
-    bool LoadOgg(OggVorbis_File& ovFileHandle);
+protected:
+    bool CreateInternal(stb_vorbis*);
 };

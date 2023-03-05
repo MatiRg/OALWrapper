@@ -46,6 +46,7 @@ SET(ALL_SOURCES
     Source/OAL_SourceManager.cpp
     Source/OAL_Stream.cpp
     Source/OAL_Types.cpp
+    ThirdParty/stb_vorbis.c
 )
 SET(ALL_INCLUDES
     Include/OALWrapper/OAL_AudioData.h
@@ -78,6 +79,11 @@ set(SOURCES_FULL
 	${ALL_INCLUDES}
 	${ALL_SOURCES}
 )
+set_source_files_properties(ThirdParty/stb_vorbis.c PROPERTIES LANGUAGE CXX)
+# Ignore Third-Party compiler warnings
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+	set_source_files_properties(ThirdParty/stb_vorbis.c PROPERTIES COMPILE_OPTIONS "-Wno-shadow")
+endif()
 
 add_library(OALWrapper STATIC ${SOURCES_FULL})
 #
@@ -92,7 +98,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	endif()
     target_link_directories(OALWrapper PUBLIC ${WIN_PATH_LIBS}/lib)
 	
-	set(INC_BASE ${INC_BASE} ${WIN_PATH_LIBS}/include)
+	set(INC_BASE ${INC_BASE} ${WIN_PATH_LIBS}/include ThirdParty)
 	
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 		set(LIBS SDL2main SDL2 OpenAL32 ogg vorbis vorbisenc vorbisfile)

@@ -83,13 +83,12 @@ bool cOAL_WAVSample::SetInternalFormat(const SDL_AudioSpec& AudioSpec, size_t Le
     return true;
 }
 
-bool cOAL_WAVSample::CreateFromFile(const std::wstring& asFilename)
+bool cOAL_WAVSample::CreateInternal(SDL_RWops* RWops)
 {
-    std::string sFileName = WString2String(asFilename);
     Uint8* pData = {};
     Uint32 Length = {};
     SDL_AudioSpec AudioSpec;
-    if( !SDL_LoadWAV_RW(SDL_RWFromFile(sFileName.c_str(), "rb"), 1, &AudioSpec, &pData, &Length) )
+    if( !SDL_LoadWAV_RW(RWops, 1, &AudioSpec, &pData, &Length) )
     {
         return false;
     }
@@ -109,27 +108,13 @@ bool cOAL_WAVSample::CreateFromFile(const std::wstring& asFilename)
     return mbStatus;
 }
 
+bool cOAL_WAVSample::CreateFromFile(const std::wstring& asFilename)
+{
+    std::string FileName = WString2String(asFilename);
+    return CreateInternal(SDL_RWFromFile(FileName.c_str(), "rb"));
+}
+
 bool cOAL_WAVSample::CreateFromBuffer(const void* apBuffer, size_t aSize)
 {
-    Uint8* pData = {};
-    Uint32 Length = {};
-    SDL_AudioSpec AudioSpec;
-    if( !SDL_LoadWAV_RW(SDL_RWFromConstMem(apBuffer, aSize), 1, &AudioSpec, &pData, &Length) )
-    {
-        return false;
-    }
-    //
-    if( !SetInternalFormat(AudioSpec, Length) )
-    {
-        SDL_FreeWAV(pData);
-        return false;
-    }
-    mlFrequency = AudioSpec.freq;
-    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlFrequency);
-
-    cOAL_Buffer* pBuffer = mvBuffers[0];
-    mbStatus = pBuffer->Feed(pData, Length);
-    SDL_FreeWAV(pData);
-
-    return mbStatus;
+    return CreateInternal(SDL_RWFromConstMem(apBuffer, aSize));
 }

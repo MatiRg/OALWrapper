@@ -17,6 +17,7 @@
 #include "OAL_Sample.h"
 
 struct SDL_AudioSpec;
+struct SDL_RWops;
 
 class cOAL_WAVSample : public cOAL_Sample
 {
@@ -26,4 +27,5 @@ public:
 
 protected:
     bool SetInternalFormat(const SDL_AudioSpec&, size_t);
+    bool CreateInternal(SDL_RWops*);
 };
