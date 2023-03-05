@@ -43,7 +43,7 @@ int main(int, char*[])
         return 1;
     }
     //
-    cOAL_Sample* Sample1 = OAL_Sample_Load( "06_amb.ogg" );
+    cOAL_Sample* Sample1 = OAL_Sample_Load( "cell_alois.wav" );
     cOAL_Stream* Stream1 = OAL_Stream_Load( "06_amb.ogg" );
     if( Sample1 && Stream1 )
     {

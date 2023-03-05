@@ -19,178 +19,117 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <ogg/ogg.h>
+#include <SDL2/SDL.h>
 
-//------------------------------------------------------------------
+bool IsAudioFormat8(const SDL_AudioFormat x)
+{
+    if(x == AUDIO_S8 || x == AUDIO_U8 )
+    {
+        return true;
+    }
+    return false;
+}
 
-///////////////////////////////////////////////////////////
-//	void Load ( const string &asFilename )
-//	-	Loads sample data from a WAV file
-///////////////////////////////////////////////////////////
+bool IsAudioFormat16(const SDL_AudioFormat x)
+{
+    if(x == AUDIO_U16 || x == AUDIO_S16 )
+    {
+        return true;
+    }
+    return false;
+}
 
-//------------------------------------------------------------------
+bool cOAL_WAVSample::SetInternalFormat(const SDL_AudioSpec& AudioSpec, size_t Length)
+{
+    mlChannels = AudioSpec.channels;
+    if (mlChannels == 2)
+    {
+        if ( IsAudioFormat8(AudioSpec.format) )
+        {
+            mFormat = AL_FORMAT_STEREO8;
+            mlSamples = Length / 2;
+        }
+        else if ( IsAudioFormat16(AudioSpec.format) )
+        {
+            mlSamples = Length / 4;
+            mFormat = AL_FORMAT_STEREO16;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else if (mlChannels == 1)
+    {
+        if ( IsAudioFormat8(AudioSpec.format) )
+        {
+            mlSamples = Length;
+            mFormat = AL_FORMAT_MONO8;
+        }
+        else if ( IsAudioFormat16(AudioSpec.format) )
+        {
+            mlSamples = Length / 2;
+            mFormat = AL_FORMAT_MONO16;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
+    return true;
+}
 
 bool cOAL_WAVSample::CreateFromFile(const std::wstring& asFilename)
 {
-    FILE* fileHandle = OpenFileW(asFilename, L"rb");
-    fseek(fileHandle, 0, SEEK_END);
-    size_t pos = ftell(fileHandle);
-    fseek(fileHandle, 0, SEEK_SET);
-
-    void* buffer = malloc(pos);
-
-    fread(buffer, pos, 1, fileHandle);
-    fclose(fileHandle);
-    bool result = CreateFromBuffer(buffer, pos);
-    free(buffer);
-
-    return result;
-}
-
-struct RIFF_Header
-{
-    char chunkID[4];
-    ogg_int32_t chunkSize;
-    char format[4];
-};
-
-struct WAVE_Format
-{
-    char subChunkID[4];
-    ogg_int32_t subChunkSize;
-    ogg_int16_t audioFormat;
-    ogg_int16_t numChannels;
-    ogg_int32_t sampleRate;
-    ogg_int32_t byteRate;
-    ogg_int16_t blockAlign;
-    ogg_int16_t bitsPerSample;
-};
-
-struct WAVE_Data
-{
-    char subChunkID[4];       // should contain the word data
-    ogg_int32_t subChunkSize; // Stores the size of the data block
-};
-
-struct RIFF_SubChunk
-{
-    char subChunkID[4];       // should contain the word data
-    ogg_int32_t subChunkSize; // Stores the size of the data block
-};
-
-static const char* find_chunk(const char* start, const char* end, const char* chunkID)
-{
-    RIFF_SubChunk chunk;
-    const char* ptr = start;
-    while (ptr < (end - sizeof(RIFF_SubChunk)))
+    std::string sFileName = WString2String(asFilename);
+    Uint8* pData = {};
+    Uint32 Length = {};
+    SDL_AudioSpec AudioSpec;
+    if( !SDL_LoadWAV_RW(SDL_RWFromFile(sFileName.c_str(), "rb"), 1, &AudioSpec, &pData, &Length) )
     {
-        memcpy(&chunk, ptr, sizeof(RIFF_SubChunk));
-
-        if (chunk.subChunkID[0] == chunkID[0] &&
-            chunk.subChunkID[1] == chunkID[1] &&
-            chunk.subChunkID[2] == chunkID[2] &&
-            chunk.subChunkID[3] == chunkID[3])
-        {
-            return ptr;
-        }
-        ptr += sizeof(RIFF_SubChunk) + chunk.subChunkSize;
+        return false;
     }
-    return 0;
-}
+    //
+    if( !SetInternalFormat(AudioSpec, Length) )
+    {
+        SDL_FreeWAV(pData);
+        return false;
+    }
+    mlFrequency = AudioSpec.freq;
+    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlFrequency);
 
-template <typename T>
-inline const char* readStruct(T& dest, const char*& ptr)
-{
-    const char* ret;
-    memcpy(&dest, ptr, sizeof(T));
-    ptr += sizeof(RIFF_SubChunk);
-    ret = ptr;
-    ptr += dest.subChunkSize;
-    return ret;
+    cOAL_Buffer* pBuffer = mvBuffers[0];
+    mbStatus = pBuffer->Feed(pData, Length);
+    SDL_FreeWAV(pData);
+
+    return mbStatus;
 }
 
 bool cOAL_WAVSample::CreateFromBuffer(const void* apBuffer, size_t aSize)
 {
-    const char* start = (const char*)apBuffer;
-    const char* end = start + aSize;
-    const char* ptr = start;
-    RIFF_Header riff_header;
-    WAVE_Format wave_format;
-    WAVE_Data wave_data;
-
-    memcpy(&riff_header, ptr, sizeof(RIFF_Header));
-    ptr += sizeof(RIFF_Header);
-
-    if (riff_header.chunkID[0] != 'R' ||
-        riff_header.chunkID[1] != 'I' ||
-        riff_header.chunkID[2] != 'F' ||
-        riff_header.chunkID[3] != 'F' ||
-        riff_header.format[0] != 'W' ||
-        riff_header.format[1] != 'A' ||
-        riff_header.format[2] != 'V' ||
-        riff_header.format[3] != 'E')
+    Uint8* pData = {};
+    Uint32 Length = {};
+    SDL_AudioSpec AudioSpec;
+    if( !SDL_LoadWAV_RW(SDL_RWFromConstMem(apBuffer, aSize), 1, &AudioSpec, &pData, &Length) )
     {
         return false;
     }
-
-    ptr = find_chunk(ptr, end, "fmt ");
-    if (!ptr)
+    //
+    if( !SetInternalFormat(AudioSpec, Length) )
     {
+        SDL_FreeWAV(pData);
         return false;
     }
-    readStruct(wave_format, ptr);
-
-    if (wave_format.audioFormat != 1)
-    {
-        return false;
-    }
-
-    ptr = find_chunk(ptr, end, "data");
-    if (!ptr)
-    {
-        return false;
-    }
-
-    const char* base = readStruct(wave_data, ptr);
-
-    size_t size = wave_data.subChunkSize;
-    if (size > static_cast<size_t>(end - base))
-    {
-        return false;
-    }
-
-    mlChannels = wave_format.numChannels;
-    if (mlChannels == 2)
-    {
-        if (wave_format.bitsPerSample == 8)
-        {
-            mFormat = AL_FORMAT_STEREO8;
-            mlSamples = size / 2;
-        }
-        else // if (wave_format.bitsPerSample == 16)
-        {
-            mlSamples = size / 4;
-            mFormat = AL_FORMAT_STEREO16;
-        }
-    }
-    else // if (mlChannels == 1)
-    {
-        if (wave_format.bitsPerSample == 8)
-        {
-            mlSamples = size;
-            mFormat = AL_FORMAT_MONO8;
-        }
-        else // if (wave_format.bitsPerSample == 16)
-        {
-            mlSamples = size / 2;
-            mFormat = AL_FORMAT_MONO16;
-        }
-    }
-    mlFrequency = wave_format.sampleRate;
-    mfTotalTime = float(mlSamples) / float(mlFrequency);
+    mlFrequency = AudioSpec.freq;
+    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlFrequency);
 
     cOAL_Buffer* pBuffer = mvBuffers[0];
-    mbStatus = pBuffer->Feed((ALvoid*)base, size);
+    mbStatus = pBuffer->Feed(pData, Length);
+    SDL_FreeWAV(pData);
 
-    return true;
+    return mbStatus;
 }

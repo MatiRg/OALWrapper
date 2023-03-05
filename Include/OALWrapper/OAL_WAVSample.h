@@ -16,6 +16,8 @@
 #include "OAL_Helper.h"
 #include "OAL_Sample.h"
 
+struct SDL_AudioSpec;
+
 class cOAL_WAVSample : public cOAL_Sample
 {
 public:
@@ -23,4 +25,5 @@ public:
     bool CreateFromBuffer(const void* apBuffer, size_t aSize);
 
 protected:
+    bool SetInternalFormat(const SDL_AudioSpec&, size_t);
 };
