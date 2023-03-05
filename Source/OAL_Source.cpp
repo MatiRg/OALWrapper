@@ -636,20 +636,28 @@ void cOAL_Source::SetLoop(const bool abLoop)
     }
 }
 
-//////////////////////////////////////////////////////
-//	void SetMinMaxDistance ( const float afMin, const float afMax )
-//	-	Sets the source falloff distances
-//////////////////////////////////////////////////////
-
-//--------------------------------------------------------------------------------
-
-void cOAL_Source::SetMinMaxDistance(const float afMin, const float afMax)
+void cOAL_Source::SetMinDistance(const float afMin)
 {
-    DEF_FUNC_NAME("cOAL_Source::SeMinMaxDistance()");
+    DEF_FUNC_NAME("cOAL_Source::SetMinDistance()");
     FUNC_USES_AL;
+    mfMinDistance = afMin;
+    RUN_AL_FUNC(alSourcef(mlObjectId, AL_REFERENCE_DISTANCE, mfMinDistance));
+}
 
-    RUN_AL_FUNC(alSourcef(mlObjectId, AL_REFERENCE_DISTANCE, afMin));
-    RUN_AL_FUNC(alSourcef(mlObjectId, AL_MAX_DISTANCE, afMax));
+void cOAL_Source::SetMaxDistance(const float afMax)
+{
+    DEF_FUNC_NAME("cOAL_Source::SetMaxDistance()");
+    FUNC_USES_AL;
+    mfMaxDistance = afMax;
+    RUN_AL_FUNC(alSourcef(mlObjectId, AL_MAX_DISTANCE, mfMaxDistance));
+}
+
+void cOAL_Source::SetAttenuation(const float afAttenuation)
+{
+    DEF_FUNC_NAME("cOAL_Source::SetAttenuation()");
+    FUNC_USES_AL;
+    mfAttenuation = afAttenuation;
+    RUN_AL_FUNC(alSourcef(mlObjectId, AL_ROLLOFF_FACTOR, mfAttenuation));
 }
 
 //--------------------------------------------------------------------------------

@@ -28,7 +28,11 @@ void OAL_Source_SetLoop(int alSource, const bool abLoop);
 void OAL_Source_SetPosition(const int alSource, const float* apPos);
 void OAL_Source_SetVelocity(const int alSource, const float* apVel);
 void OAL_Source_SetAttributes(const int alSource, const float* apPos, const float* apVel);
-void OAL_Source_SetMinMaxDistance(const int alSource, const float afMin, const float afMax);
+
+void OAL_Source_SetMinDistance(const int alSource, const float afMin);
+void OAL_Source_SetMaxDistance(const int alSource, const float afMax);
+void OAL_Source_SetAttenuation(const int alSource, const float afAttenuation);
+
 void OAL_Source_SetPositionRelative(const int alSource, const bool abRelative);
 void OAL_Source_SetPriority(const int alSource, const unsigned int alPriority);
 

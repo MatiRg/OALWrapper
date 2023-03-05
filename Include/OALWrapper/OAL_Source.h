@@ -20,6 +20,7 @@
 #include "OAL_LowLevelObject.h"
 #include "OAL_SourceManager.h"
 #include "OAL_Types.h"
+#include <limits>
 
 static constexpr int OAL_SEND_DIRECT = 0x10000000;
 static constexpr int OAL_SEND_AUX0 = 1;
@@ -101,16 +102,19 @@ public:
 
     ////////////////////////////////////
     // Attribute modifiers
+    
     void SetGain(float afGain);
     void SetPitch(float afPitch);
     void SetPosition(const float* apPos);
     void SetPositionRelative(bool abRelative);
     void SetVelocity(const float* apVel);
     void SetLoop(bool abLoop);
-    void SetMinMaxDistance(const float afMin, const float afMax);
+
+    void SetMinDistance(const float afMin);
+    void SetMaxDistance(const float afMax);
+    void SetAttenuation(const float afAttenuation);
 
     void SetElapsedTime(double afTime);
-
     void SetPriority(const ALuint alX);
 
     float GetGain() { return mfGain; }
@@ -175,6 +179,10 @@ private:
     float mvPos[3];
     float mvVel[3];
     bool mbRelativePosition;
+
+    float mfMinDistance = 1.0f;
+    float mfMaxDistance = std::numeric_limits<float>::max();
+    float mfAttenuation = 1.0f;
 
     std::vector<cOAL_SourceSend*> mvSends;
 

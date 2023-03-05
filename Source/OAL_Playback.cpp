@@ -213,12 +213,7 @@ void OAL_Source_SetAttributes(const int alSource, const float* apPos, const floa
     }
 }
 
-//////////////////////////////////////////////////////////////////
-////	void OAL_Source_SetMinMaxDistance ( const int alSource, const float afMin, const float afMax )
-////	-	Sets min and max distance values for the specified source.
-//////////////////////////////////////////////////////////////////
-
-void OAL_Source_SetMinMaxDistance(const int alSource, const float afMin, const float afMax)
+void OAL_Source_SetMinDistance(const int alSource, const float afMin)
 {
     if (gpDevice == nullptr)
         return;
@@ -226,7 +221,33 @@ void OAL_Source_SetMinMaxDistance(const int alSource, const float afMin, const f
     if (pSource)
     {
         pSource->Lock();
-        pSource->SetMinMaxDistance(afMin, afMax);
+        pSource->SetMinDistance(afMin);
+        pSource->Unlock();
+    }
+}
+
+void OAL_Source_SetMaxDistance(const int alSource, const float afMax)
+{
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetMaxDistance(afMax);
+        pSource->Unlock();
+    }
+}
+
+void OAL_Source_SetAttenuation(const int alSource, const float afAttenuation)
+{
+    if (gpDevice == nullptr)
+        return;
+    cOAL_Source* pSource = gpDevice->GetSource(alSource);
+    if (pSource)
+    {
+        pSource->Lock();
+        pSource->SetAttenuation(afAttenuation);
         pSource->Unlock();
     }
 }
