@@ -5,58 +5,47 @@
  *
  * For conditions of distribution and use, see copyright notice in LICENSE
  */
-#ifndef _OAL_EFFECTSLOT_H
-#define _OAL_EFFECTSLOT_H
-
-#include "OAL_Types.h"
+#pragma once
 #include "OAL_LowLevelObject.h"
+#include "OAL_Types.h"
 
 class cOAL_EFXManager;
 
 class cOAL_EffectSlot : public iOAL_LowLevelObject
 {
 public:
-	cOAL_EffectSlot ( cOAL_EFXManager* apEFXManager, int alId );
-	~cOAL_EffectSlot();
+    cOAL_EffectSlot(cOAL_EFXManager* apEFXManager, int alId);
+    ~cOAL_EffectSlot();
 
-	bool CreateLowLevelID();
-	bool DestroyLowLevelID();
+    bool CreateLowLevelID();
+    bool DestroyLowLevelID();
 
-	void SaveObjectState(){}
-	void RestoreObjectState(){}
+    void SaveObjectState() {}
+    void RestoreObjectState() {}
 
-	bool IsValidObject();
+    bool IsValidObject();
 
-	bool AttachEffect ( cOAL_Effect* apEffect );
-	bool IsFree() { return !mpEffect; }
+    bool AttachEffect(cOAL_Effect* apEffect);
+    bool IsFree() { return !mpEffect; }
 
-	void SetGain ( float afGain );
-	float GetGain () { return mfGain; }
+    void SetGain(float afGain);
+    float GetGain() { return mfGain; }
 
-	void SetAutoAdjust (bool abAuto);
-	bool GetAutoAdjust () { return mbAutoAdjust; }
+    void SetAutoAdjust(bool abAuto);
+    bool GetAutoAdjust() { return mbAutoAdjust; }
 
-	void Update();
-	void Reset();
+    void Update();
+    void Reset();
 
-	void Lock();
-	void Unlock();
+    void Lock();
+    void Unlock();
 
 private:
-	int mlId;
-	cOAL_Effect* mpEffect;
-	float mfGain;
-	bool mbAutoAdjust;
-	cOAL_EFXManager* mpEFXManager;
+    int mlId;
+    cOAL_Effect* mpEffect;
+    float mfGain;
+    bool mbAutoAdjust;
+    cOAL_EFXManager* mpEFXManager;
 
-	SDL_mutex*		mpMutex;
-    
+    SDL_mutex* mpMutex;
 };
-
-#endif	// _OAL_EFFECTSLOT_H
-
-
-
-
-
-

@@ -7,63 +7,58 @@
  */
 #include "OALWrapper/OAL_Effect.h"
 #include "OALWrapper/OAL_Helper.h"
-
 #include <SDL2/SDL_mutex.h>
 
-cOAL_Effect::cOAL_Effect():
-							 mbNeedsUpdate(true), 
-							 mpMutex(nullptr)
+cOAL_Effect::cOAL_Effect() : mbNeedsUpdate(true),
+                             mpMutex(nullptr)
 {
-	mbStatus = CreateLowLevelID();
+    mbStatus = CreateLowLevelID();
 }
 
 cOAL_Effect::~cOAL_Effect()
 {
-	DestroyLowLevelID();
+    DestroyLowLevelID();
 }
 
 bool cOAL_Effect::CreateLowLevelID()
 {
-	DEF_FUNC_NAME("cOAL_Effect::CreateLowLevelID()");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("cOAL_Effect::CreateLowLevelID()");
+    FUNC_USES_AL;
 
-	
-	RUN_AL_FUNC(alGenEffects ( 1, &mlEffectId );)
-	
-	return (!AL_ERROR_OCCURED && (IsValidObject()));
+    RUN_AL_FUNC(alGenEffects(1, &mlEffectId))
+
+    return (!AL_ERROR_OCCURED && (IsValidObject()));
 }
-
 
 bool cOAL_Effect::DestroyLowLevelID()
 {
-	DEF_FUNC_NAME("cOAL_Effect::DestroyLowLevelID()");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("cOAL_Effect::DestroyLowLevelID()");
+    FUNC_USES_AL;
 
-	bool bSuccess = true;
-	if ( IsValidObject() )
-	{
-		RUN_AL_FUNC(alDeleteEffects( 1, &mlEffectId ));
-		
-		bSuccess = bSuccess && !AL_ERROR_OCCURED;
-	}
-	return bSuccess;
+    bool bSuccess = true;
+    if (IsValidObject())
+    {
+        RUN_AL_FUNC(alDeleteEffects(1, &mlEffectId));
+
+        bSuccess = bSuccess && !AL_ERROR_OCCURED;
+    }
+    return bSuccess;
 }
 
 bool cOAL_Effect::IsValidObject()
 {
-	DEF_FUNC_NAME("cOAL_Effect::IsValidObject()");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("cOAL_Effect::IsValidObject()");
+    FUNC_USES_AL;
 
-	return (alIsEffect(mlEffectId) == AL_TRUE);
+    return (alIsEffect(mlEffectId) == AL_TRUE);
 }
-
 
 void cOAL_Effect::Lock()
 {
-	SDL_LockMutex(mpMutex);
+    SDL_LockMutex(mpMutex);
 }
 
 void cOAL_Effect::Unlock()
 {
-	SDL_UnlockMutex(mpMutex);
+    SDL_UnlockMutex(mpMutex);
 }

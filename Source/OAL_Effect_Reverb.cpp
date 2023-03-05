@@ -7,567 +7,548 @@
  */
 #include "OALWrapper/OAL_Effect_Reverb.h"
 
-void ClampValue ( float *apValue, float afMin, float afMax );
+void ClampValue(float* apValue, float afMin, float afMax);
 
-void cOAL_Effect_Reverb::SetDensity( float afDensity)
+void cOAL_Effect_Reverb::SetDensity(float afDensity)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
     if (mfDensity == afDensity)
-		return;
+        return;
 
-	Lock();
+    Lock();
 
     mfDensity = afDensity;
-	ClampValue(&mfDensity, 0.0f, 1.0f);
+    ClampValue(&mfDensity, 0.0f, 1.0f);
 
-    ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_DENSITY : AL_REVERB_DENSITY);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_DENSITY : AL_REVERB_DENSITY);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfDensity));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfDensity));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetDiffusion ( float afDiffusion)
+void cOAL_Effect_Reverb::SetDiffusion(float afDiffusion)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
-	
-	if (mfDiffusion == afDiffusion)
-		return;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	Lock();
+    if (mfDiffusion == afDiffusion)
+        return;
 
-	mfDiffusion = afDiffusion;
-	ClampValue(&mfDiffusion, 0.0f, 1.0f);
+    Lock();
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_DIFFUSION : AL_REVERB_DIFFUSION);
+    mfDiffusion = afDiffusion;
+    ClampValue(&mfDiffusion, 0.0f, 1.0f);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfDiffusion));
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_DIFFUSION : AL_REVERB_DIFFUSION);
 
-	mbNeedsUpdate = true; 
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfDiffusion));
 
-	Unlock();
+    mbNeedsUpdate = true;
+
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetGain ( float afGain)
+void cOAL_Effect_Reverb::SetGain(float afGain)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfGain == afGain)
-		return;
+    if (mfGain == afGain)
+        return;
 
-	Lock();
+    Lock();
 
-	mfGain = afGain;
-	ClampValue(&mfGain, 0.0f, 1.0f);
+    mfGain = afGain;
+    ClampValue(&mfGain, 0.0f, 1.0f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_GAIN : AL_REVERB_GAIN);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_GAIN : AL_REVERB_GAIN);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfGain));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfGain));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetGainHF ( float afGainHF)
+void cOAL_Effect_Reverb::SetGainHF(float afGainHF)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfGainHF == afGainHF)
-		return;
+    if (mfGainHF == afGainHF)
+        return;
 
-	Lock();
+    Lock();
 
-	mfGainHF = afGainHF;
-	ClampValue(&mfGainHF, 0.0f, 1.0f);
+    mfGainHF = afGainHF;
+    ClampValue(&mfGainHF, 0.0f, 1.0f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_GAINHF : AL_REVERB_GAINHF);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_GAINHF : AL_REVERB_GAINHF);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfGainHF));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfGainHF));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetGainLF ( float afGainLF)
+void cOAL_Effect_Reverb::SetGainLF(float afGainLF)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfGainLF == afGainLF)
-		return;
+    if (mfGainLF == afGainLF)
+        return;
 
-	Lock();
+    Lock();
 
+    mfGainLF = afGainLF;
 
-	mfGainLF = afGainLF;
+    ClampValue(&mfGainLF, 0.0f, 1.0f);
 
-	ClampValue(&mfGainLF, 0.0f, 1.0f);
+    if (!mbEAXReverb)
+        return;
 
-	if (!mbEAXReverb)
-		return;
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_GAINLF, mfGainLF));
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_GAINLF, mfGainLF));
+    mbNeedsUpdate = true;
 
-	mbNeedsUpdate = true; 
-
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetDecayTime ( float afDecayTime)
+void cOAL_Effect_Reverb::SetDecayTime(float afDecayTime)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfDecayTime == afDecayTime)
-		return;
+    if (mfDecayTime == afDecayTime)
+        return;
 
-	Lock();
+    Lock();
 
-	mfDecayTime = afDecayTime;
-	ClampValue(&mfDecayTime, 0.1f, 2.0f);
+    mfDecayTime = afDecayTime;
+    ClampValue(&mfDecayTime, 0.1f, 2.0f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_DECAY_TIME : AL_REVERB_DECAY_TIME);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_DECAY_TIME : AL_REVERB_DECAY_TIME);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfDecayTime));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfDecayTime));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetDecayHFRatio ( float afDecayHFRatio )
+void cOAL_Effect_Reverb::SetDecayHFRatio(float afDecayHFRatio)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfDecayHFRatio == afDecayHFRatio)
-		return;
+    if (mfDecayHFRatio == afDecayHFRatio)
+        return;
 
-	Lock();
+    Lock();
 
-	mfDecayHFRatio = afDecayHFRatio;
-	ClampValue(&mfDecayHFRatio, 0.1f, 2.0f);
+    mfDecayHFRatio = afDecayHFRatio;
+    ClampValue(&mfDecayHFRatio, 0.1f, 2.0f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_DECAY_HFRATIO : AL_REVERB_DECAY_HFRATIO);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_DECAY_HFRATIO : AL_REVERB_DECAY_HFRATIO);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfDecayHFRatio));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfDecayHFRatio));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetDecayLFRatio ( float afDecayLFRatio )
+void cOAL_Effect_Reverb::SetDecayLFRatio(float afDecayLFRatio)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
     if (mfDecayLFRatio == afDecayLFRatio)
-		return;
+        return;
 
-	Lock();
+    Lock();
 
-	mfDecayLFRatio = afDecayLFRatio;
-	ClampValue(&mfDecayLFRatio, 0.1f, 2.0f);
+    mfDecayLFRatio = afDecayLFRatio;
+    ClampValue(&mfDecayLFRatio, 0.1f, 2.0f);
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 
-	if (!mbEAXReverb)
-		return;
+    if (!mbEAXReverb)
+        return;
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_DECAY_LFRATIO, mfDecayLFRatio));
-
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_DECAY_LFRATIO, mfDecayLFRatio));
 }
 
-void cOAL_Effect_Reverb::SetReflectionsGain ( float afReflectionsGain )
+void cOAL_Effect_Reverb::SetReflectionsGain(float afReflectionsGain)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfReflectionsGain == afReflectionsGain)
-		return;
+    if (mfReflectionsGain == afReflectionsGain)
+        return;
 
-	Lock();
+    Lock();
 
-	mfReflectionsGain = afReflectionsGain;
-	ClampValue(&mfReflectionsGain, 0.1f, 2.0f);
+    mfReflectionsGain = afReflectionsGain;
+    ClampValue(&mfReflectionsGain, 0.1f, 2.0f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_REFLECTIONS_GAIN : AL_REVERB_REFLECTIONS_GAIN);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_REFLECTIONS_GAIN : AL_REVERB_REFLECTIONS_GAIN);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfReflectionsGain));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfReflectionsGain));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetReflectionsDelay( float afReflectionsDelay )
+void cOAL_Effect_Reverb::SetReflectionsDelay(float afReflectionsDelay)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfReflectionsDelay == afReflectionsDelay)
-		return;
+    if (mfReflectionsDelay == afReflectionsDelay)
+        return;
 
-	Lock();
+    Lock();
 
-	mfReflectionsDelay = afReflectionsDelay;
-	ClampValue(&mfReflectionsDelay, 0.0f, 0.3f);
+    mfReflectionsDelay = afReflectionsDelay;
+    ClampValue(&mfReflectionsDelay, 0.0f, 0.3f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_REFLECTIONS_DELAY : AL_REVERB_REFLECTIONS_DELAY);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_REFLECTIONS_DELAY : AL_REVERB_REFLECTIONS_DELAY);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfReflectionsDelay));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfReflectionsDelay));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetReflectionsPan( float afReflectionsPan[3] )
+void cOAL_Effect_Reverb::SetReflectionsPan(float afReflectionsPan[3])
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if ( (mfReflectionsPan[0] == afReflectionsPan[0]) && 
-		 (mfReflectionsPan[1] == afReflectionsPan[1]) && 
-		 (mfReflectionsPan[2] == afReflectionsPan[2]) )
-		return;
+    if ((mfReflectionsPan[0] == afReflectionsPan[0]) &&
+        (mfReflectionsPan[1] == afReflectionsPan[1]) &&
+        (mfReflectionsPan[2] == afReflectionsPan[2]))
+        return;
 
-	Lock();
-    
-	mfReflectionsPan[0] = afReflectionsPan[0];
-	mfReflectionsPan[1] = afReflectionsPan[1];
-	mfReflectionsPan[2] = afReflectionsPan[2];
+    Lock();
 
-	ClampValue(&mfReflectionsPan[0], -1.0f, 1.0f);
-	ClampValue(&mfReflectionsPan[1], -1.0f, 1.0f);
-	ClampValue(&mfReflectionsPan[2], -1.0f, 1.0f);
+    mfReflectionsPan[0] = afReflectionsPan[0];
+    mfReflectionsPan[1] = afReflectionsPan[1];
+    mfReflectionsPan[2] = afReflectionsPan[2];
 
-	mbNeedsUpdate = true; 
+    ClampValue(&mfReflectionsPan[0], -1.0f, 1.0f);
+    ClampValue(&mfReflectionsPan[1], -1.0f, 1.0f);
+    ClampValue(&mfReflectionsPan[2], -1.0f, 1.0f);
 
-	Unlock();
+    mbNeedsUpdate = true;
 
-	if (!mbEAXReverb)
-		return;
+    Unlock();
 
-	RUN_AL_FUNC( alEffectfv( mlEffectId, AL_EAXREVERB_REFLECTIONS_PAN, mfReflectionsPan));
-	
+    if (!mbEAXReverb)
+        return;
+
+    RUN_AL_FUNC(alEffectfv(mlEffectId, AL_EAXREVERB_REFLECTIONS_PAN, mfReflectionsPan));
 }
 
-void cOAL_Effect_Reverb::SetLateReverbGain( float afLateReverbGain)
+void cOAL_Effect_Reverb::SetLateReverbGain(float afLateReverbGain)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	Lock();
+    Lock();
 
-	if (mfLateReverbGain == afLateReverbGain)
-		return;
+    if (mfLateReverbGain == afLateReverbGain)
+        return;
 
-	mfLateReverbGain = afLateReverbGain;
-	ClampValue(&mfLateReverbGain, 0.0f, 10.0f);
+    mfLateReverbGain = afLateReverbGain;
+    ClampValue(&mfLateReverbGain, 0.0f, 10.0f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_LATE_REVERB_GAIN : AL_REVERB_LATE_REVERB_GAIN);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_LATE_REVERB_GAIN : AL_REVERB_LATE_REVERB_GAIN);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfLateReverbGain));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfLateReverbGain));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetLateReverbDelay ( float afLateReverbDelay)
+void cOAL_Effect_Reverb::SetLateReverbDelay(float afLateReverbDelay)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfLateReverbDelay == afLateReverbDelay)
-		return;
+    if (mfLateReverbDelay == afLateReverbDelay)
+        return;
 
-	Lock();
+    Lock();
 
-	mfLateReverbDelay = afLateReverbDelay;
-	ClampValue(&mfLateReverbDelay, 0.0f, 0.1f);
+    mfLateReverbDelay = afLateReverbDelay;
+    ClampValue(&mfLateReverbDelay, 0.0f, 0.1f);
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_LATE_REVERB_DELAY : AL_REVERB_LATE_REVERB_DELAY);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_LATE_REVERB_DELAY : AL_REVERB_LATE_REVERB_DELAY);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfLateReverbDelay));
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfLateReverbDelay));
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 }
 
-void cOAL_Effect_Reverb::SetLateReverbPan (float afLateReverbPan[3])
+void cOAL_Effect_Reverb::SetLateReverbPan(float afLateReverbPan[3])
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if ( (mfLateReverbPan[0] == afLateReverbPan[0]) && 
-		 (mfLateReverbPan[1] == afLateReverbPan[1]) && 
-		 (mfLateReverbPan[2] == afLateReverbPan[2]) )
-		return;
+    if ((mfLateReverbPan[0] == afLateReverbPan[0]) &&
+        (mfLateReverbPan[1] == afLateReverbPan[1]) &&
+        (mfLateReverbPan[2] == afLateReverbPan[2]))
+        return;
 
-	Lock();
-    
-	mfLateReverbPan[0] = afLateReverbPan[0];
-	mfLateReverbPan[1] = afLateReverbPan[1];
-	mfLateReverbPan[2] = afLateReverbPan[2];
+    Lock();
 
-	ClampValue(&mfLateReverbPan[0], -1.0f, 1.0f);
-	ClampValue(&mfLateReverbPan[1], -1.0f, 1.0f);
-	ClampValue(&mfLateReverbPan[2], -1.0f, 1.0f);
+    mfLateReverbPan[0] = afLateReverbPan[0];
+    mfLateReverbPan[1] = afLateReverbPan[1];
+    mfLateReverbPan[2] = afLateReverbPan[2];
 
-	mbNeedsUpdate = true; 
+    ClampValue(&mfLateReverbPan[0], -1.0f, 1.0f);
+    ClampValue(&mfLateReverbPan[1], -1.0f, 1.0f);
+    ClampValue(&mfLateReverbPan[2], -1.0f, 1.0f);
 
-	Unlock();
+    mbNeedsUpdate = true;
 
-	if (!mbEAXReverb)
-		return;
+    Unlock();
 
-	RUN_AL_FUNC( alEffectfv( mlEffectId, AL_EAXREVERB_LATE_REVERB_PAN, mfLateReverbPan));
+    if (!mbEAXReverb)
+        return;
 
+    RUN_AL_FUNC(alEffectfv(mlEffectId, AL_EAXREVERB_LATE_REVERB_PAN, mfLateReverbPan));
 }
 
-void cOAL_Effect_Reverb::SetEchoTime (float afEchoTime)
+void cOAL_Effect_Reverb::SetEchoTime(float afEchoTime)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
-    
-	if (mfEchoTime == afEchoTime)
-		return;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	Lock();
+    if (mfEchoTime == afEchoTime)
+        return;
 
-	mfEchoTime = afEchoTime;
+    Lock();
 
-	ClampValue(&mfEchoTime, 0.075f, 0.25f);
+    mfEchoTime = afEchoTime;
 
-	mbNeedsUpdate = true; 
+    ClampValue(&mfEchoTime, 0.075f, 0.25f);
 
-	Unlock();
+    mbNeedsUpdate = true;
 
-	if (!mbEAXReverb)
-		return;
+    Unlock();
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_ECHO_TIME, mfEchoTime));
+    if (!mbEAXReverb)
+        return;
 
-
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_ECHO_TIME, mfEchoTime));
 }
 
-void cOAL_Effect_Reverb::SetEchoDepth (float afEchoDepth)
+void cOAL_Effect_Reverb::SetEchoDepth(float afEchoDepth)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfEchoDepth == afEchoDepth)
-		return;
+    if (mfEchoDepth == afEchoDepth)
+        return;
 
-	Lock();
+    Lock();
 
+    mfEchoDepth = afEchoDepth;
 
-	mfEchoDepth = afEchoDepth;
+    ClampValue(&mfEchoDepth, 0.0f, 1.0f);
 
-	ClampValue(&mfEchoDepth, 0.0f, 1.0f);
+    mbNeedsUpdate = true;
 
-	mbNeedsUpdate = true; 
+    Unlock();
 
-	Unlock();
+    if (!mbEAXReverb)
+        return;
 
-	if (!mbEAXReverb)
-		return;
-
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_ECHO_DEPTH, mfEchoDepth));
-
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_ECHO_DEPTH, mfEchoDepth));
 }
 
-void cOAL_Effect_Reverb::SetModulationTime (float afModulationTime)
+void cOAL_Effect_Reverb::SetModulationTime(float afModulationTime)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
     if (mfModulationTime == afModulationTime)
-		return;
+        return;
 
-	Lock();
+    Lock();
 
-	mfModulationTime = afModulationTime;
+    mfModulationTime = afModulationTime;
 
-	ClampValue(&mfModulationTime, 0.04f, 4.0f);
+    ClampValue(&mfModulationTime, 0.04f, 4.0f);
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 
-	if (!mbEAXReverb)
-		return;
+    if (!mbEAXReverb)
+        return;
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_MODULATION_TIME, mfModulationTime));
-
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_MODULATION_TIME, mfModulationTime));
 }
 
-void cOAL_Effect_Reverb::SetModulationDepth (float afModulationDepth)
+void cOAL_Effect_Reverb::SetModulationDepth(float afModulationDepth)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfModulationDepth == afModulationDepth)
-		return;
+    if (mfModulationDepth == afModulationDepth)
+        return;
 
-	Lock();
+    Lock();
 
-	mfModulationDepth = afModulationDepth;
+    mfModulationDepth = afModulationDepth;
 
-	ClampValue(&mfModulationDepth, 0.0f, 1.0f);
+    ClampValue(&mfModulationDepth, 0.0f, 1.0f);
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 
-	if (!mbEAXReverb)
-		return;
+    if (!mbEAXReverb)
+        return;
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_MODULATION_DEPTH, mfModulationDepth));
-
-	
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_MODULATION_DEPTH, mfModulationDepth));
 }
 
-void cOAL_Effect_Reverb::SetAirAbsorptionGainHF (float afAirAbsorptionGainHF)
+void cOAL_Effect_Reverb::SetAirAbsorptionGainHF(float afAirAbsorptionGainHF)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfAirAbsorptionGainHF == afAirAbsorptionGainHF)
-		return;
+    if (mfAirAbsorptionGainHF == afAirAbsorptionGainHF)
+        return;
 
-	Lock();
+    Lock();
 
-	mfAirAbsorptionGainHF = afAirAbsorptionGainHF;
-	ClampValue(&mfAirAbsorptionGainHF, 0.892f, 1.0f);
+    mfAirAbsorptionGainHF = afAirAbsorptionGainHF;
+    ClampValue(&mfAirAbsorptionGainHF, 0.892f, 1.0f);
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_AIR_ABSORPTION_GAINHF : AL_REVERB_AIR_ABSORPTION_GAINHF);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_AIR_ABSORPTION_GAINHF : AL_REVERB_AIR_ABSORPTION_GAINHF);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfAirAbsorptionGainHF));
-
-	
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfAirAbsorptionGainHF));
 }
 
-void cOAL_Effect_Reverb::SetHFReference (float afHFReference)
+void cOAL_Effect_Reverb::SetHFReference(float afHFReference)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfHFReference == afHFReference)
-		return;
+    if (mfHFReference == afHFReference)
+        return;
 
-	Lock();
+    Lock();
 
-	mfHFReference = afHFReference;
+    mfHFReference = afHFReference;
 
-	ClampValue(&mfHFReference, 1000.0f, 20000.0f);
+    ClampValue(&mfHFReference, 1000.0f, 20000.0f);
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 
-	if (!mbEAXReverb)
-		return;
+    if (!mbEAXReverb)
+        return;
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_HFREFERENCE, mfHFReference));
-
-
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_HFREFERENCE, mfHFReference));
 }
 
-void cOAL_Effect_Reverb::SetLFReference (float afLFReference)
+void cOAL_Effect_Reverb::SetLFReference(float afLFReference)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfLFReference == afLFReference)
-		return;
+    if (mfLFReference == afLFReference)
+        return;
 
-	Lock();
+    Lock();
 
-	mfLFReference = afLFReference;
+    mfLFReference = afLFReference;
 
-	ClampValue(&mfLFReference, 20.0f, 1000.0f);
+    ClampValue(&mfLFReference, 20.0f, 1000.0f);
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 
-	if (!mbEAXReverb)
-		return;
+    if (!mbEAXReverb)
+        return;
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, AL_EAXREVERB_LFREFERENCE, mfLFReference));
-
+    RUN_AL_FUNC(alEffectf(mlEffectId, AL_EAXREVERB_LFREFERENCE, mfLFReference));
 }
 
-void cOAL_Effect_Reverb::SetRoomRolloffFactor (float afRoomRolloffFactor)
+void cOAL_Effect_Reverb::SetRoomRolloffFactor(float afRoomRolloffFactor)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mfRoomRolloffFactor == afRoomRolloffFactor)
-		return;
+    if (mfRoomRolloffFactor == afRoomRolloffFactor)
+        return;
 
-	Lock();
+    Lock();
 
-	mfRoomRolloffFactor = afRoomRolloffFactor;
-	ClampValue(&mfRoomRolloffFactor, 0.0f, 1.0f);
+    mfRoomRolloffFactor = afRoomRolloffFactor;
+    ClampValue(&mfRoomRolloffFactor, 0.0f, 1.0f);
 
-	mbNeedsUpdate = true; 
+    mbNeedsUpdate = true;
 
-	Unlock();
+    Unlock();
 
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_ROOM_ROLLOFF_FACTOR : AL_REVERB_ROOM_ROLLOFF_FACTOR);
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_ROOM_ROLLOFF_FACTOR : AL_REVERB_ROOM_ROLLOFF_FACTOR);
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mfRoomRolloffFactor));
-
-
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mfRoomRolloffFactor));
 }
 
-void cOAL_Effect_Reverb::SetDecayHFLimit (ALboolean abDecayHFLimit)
+void cOAL_Effect_Reverb::SetDecayHFLimit(ALboolean abDecayHFLimit)
 {
-	DEF_FUNC_NAME("");
-	FUNC_USES_AL;
+    DEF_FUNC_NAME("");
+    FUNC_USES_AL;
 
-	if (mbDecayHFLimit == abDecayHFLimit)
-		return;
+    if (mbDecayHFLimit == abDecayHFLimit)
+        return;
 
-	Lock();
+    Lock();
 
-	mbDecayHFLimit = abDecayHFLimit;
-	
-	ALuint lParameter = (mbEAXReverb? AL_EAXREVERB_DECAY_HFLIMIT : AL_REVERB_DECAY_HFLIMIT);
+    mbDecayHFLimit = abDecayHFLimit;
 
-	RUN_AL_FUNC( alEffectf( mlEffectId, lParameter, mbDecayHFLimit));
+    ALuint lParameter = (mbEAXReverb ? AL_EAXREVERB_DECAY_HFLIMIT : AL_REVERB_DECAY_HFLIMIT);
 
-	mbNeedsUpdate = true;
+    RUN_AL_FUNC(alEffectf(mlEffectId, lParameter, mbDecayHFLimit));
 
-	Unlock();
+    mbNeedsUpdate = true;
 
+    Unlock();
 }
 
-void ClampValue ( float *apValue, float afMin, float afMax )
+void ClampValue(float* apValue, float afMin, float afMax)
 {
-	if (*apValue < afMin)
-		*apValue = afMin;
-	else if (*apValue > afMax)
-		*apValue = afMax;
+    if (*apValue < afMin)
+        *apValue = afMin;
+    else if (*apValue > afMax)
+        *apValue = afMax;
 }
