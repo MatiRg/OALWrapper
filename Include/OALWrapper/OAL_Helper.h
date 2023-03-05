@@ -13,11 +13,8 @@
     Set of Helper functions
 */
 #pragma once
-
-extern bool gbLogSounds;
-extern void OAL_Log(int alMessageType, const char* asMessage, ...);
-
 #include "OAL_Types.h"
+#include "OAL_LoggerObject.h"
 
 #define DEF_FUNC_NAME(X) std::string sFuncName(#X);
 

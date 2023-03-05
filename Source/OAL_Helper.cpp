@@ -204,7 +204,7 @@ void ClearALCErrors(const std::string&)
 bool CheckALCErrors(const std::string&)
 {
     bool bErrorOccurred = OAL_GetALCError();
-    // if ( (bErrorOccured) && (gbLogSounds) )
+    // if ( (bErrorOccured) && (iOAL_LoggerObject::IsLogEnabled()) )
     //	OAL_Log(2,"%s CheckALCErrors raised %s\n", asFunction.c_str(), OAL_GetALCErrorString().c_str() );
     return bErrorOccurred;
 }
