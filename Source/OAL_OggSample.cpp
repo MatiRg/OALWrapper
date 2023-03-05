@@ -49,7 +49,8 @@ bool cOAL_OggSample::CreateInternal(stb_vorbis* STBFile)
 
 bool cOAL_OggSample::CreateFromFile(const std::wstring& asFilename)
 {
-    std::string FileName = WString2String(asFilename);
+    msFilename = asFilename;
+    std::string FileName = WString2String(msFilename);
     stb_vorbis* STBFile = stb_vorbis_open_filename(FileName.c_str(), nullptr, nullptr);
     const bool Status = CreateInternal(STBFile);
     stb_vorbis_close(STBFile);

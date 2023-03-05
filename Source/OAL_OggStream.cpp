@@ -17,142 +17,44 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#define STB_VORBIS_HEADER_ONLY
+#include <stb_vorbis.c>
 
-struct tMemoryReader
-{
-    char* buff;
-    ogg_int64_t buff_size;
-    ogg_int64_t buff_pos;
-
-    tMemoryReader(const void* aBuff, size_t aBuffSize) : buff(nullptr), buff_size(aBuffSize), buff_pos(0)
-    {
-        buff = new char[buff_size];
-        memcpy(buff, aBuff, buff_size);
-    }
-    ~tMemoryReader()
-    {
-        delete[] buff;
-    }
-};
-
-size_t memoryRead(void* buff, size_t b, size_t nelts, void* data)
-{
-    tMemoryReader* of = reinterpret_cast<tMemoryReader*>(data);
-    size_t len = b * nelts;
-    if (of->buff_pos + static_cast<ogg_int64_t>(len) > of->buff_size)
-    {
-        len = of->buff_size - of->buff_pos;
-    }
-    if (len)
-        memcpy(buff, of->buff + of->buff_pos, len);
-    of->buff_pos += len;
-    return len;
-}
-
-int memorySeek(void* data, ogg_int64_t seek, int type)
-{
-    tMemoryReader* of = reinterpret_cast<tMemoryReader*>(data);
-
-    switch (type)
-    {
-    case SEEK_CUR:
-        of->buff_pos += seek;
-        break;
-    case SEEK_END:
-        of->buff_pos = of->buff_size - seek;
-        break;
-    case SEEK_SET:
-        of->buff_pos = seek;
-        break;
-    default:
-        return -1;
-    }
-    if (of->buff_pos < 0)
-    {
-        of->buff_pos = 0;
-        return -1;
-    }
-    if (of->buff_pos > of->buff_size)
-    {
-        of->buff_pos = of->buff_size;
-        return -1;
-    }
-    return 0;
-}
-
-long memoryTell(void* data)
-{
-    tMemoryReader* of = reinterpret_cast<tMemoryReader*>(data);
-    return of->buff_pos;
-}
-
-int memoryClose(void* data)
-{
-    tMemoryReader* of = reinterpret_cast<tMemoryReader*>(data);
-    delete of;
-    return 0;
-}
-
-static ov_callbacks OV_MEMORY_CALLBACKS = 
-{
-    memoryRead,
-    memorySeek,
-    memoryClose,
-    memoryTell
-};
-
-//---------------------------------------------------------------------
-
-cOAL_OggStream::cOAL_OggStream() : mbIsValidHandle(false)
+cOAL_OggStream::cOAL_OggStream()
 {
 }
-
-//---------------------------------------------------------------------
 
 cOAL_OggStream::~cOAL_OggStream()
 {
     Destroy();
 }
 
-//---------------------------------------------------------------------
-
-///////////////////////////////////////////////////////////
-//	void Stream ( const ALuint alDestBuffer )
-//	-	Streams data from the Ogg file to the buffer
-///////////////////////////////////////////////////////////
-
-//---------------------------------------------------------------------
-
 bool cOAL_OggStream::Stream(cOAL_Buffer* apDestBuffer)
 {
-    DEF_FUNC_NAME("cOAL_OggStream::Stream()");
-
     long lDataSize = 0;
 
-    // hpl::Log("Streaming...\n");
     double fStartTime = GetTime();
 
     // Loop which loads chunks of decoded data into a buffer
     while (lDataSize < (int)mlBufferSize)
     {
-        long lChunkSize = ov_read(&movStreamHandle,
-                                  mpPCMBuffer + lDataSize,
-                                  mlBufferSize - lDataSize,
-                                  SYS_ENDIANNESS,
-                                  2, 1, &mlCurrent_section);
+        long lSamples = stb_vorbis_get_samples_short_interleaved
+        (
+            STBFile, 
+            mlChannels, 
+            reinterpret_cast<short*>(mpPCMBuffer+lDataSize), 
+            (mlBufferSize-lDataSize)/GetBytesPerSample()
+        );
+
+        lSamples *= mlChannels;
+        mfActualTime += (static_cast<float>(lSamples) / static_cast<float>(mlFrequency));
+        const long lChunkSize = lSamples*GetBytesPerSample();
 
         // If we get a 0, then we are at the end of the file
         if (lChunkSize == 0)
         {
             break;
         }
-        // If we get a negative value, then something went wrong. Clean up and set error status.
-        else if (lChunkSize == OV_HOLE)
-            ;
-        else if (lChunkSize == OV_EINVAL ||
-                 lChunkSize == OV_EBADLINK ||
-                 lChunkSize < 0)
-            mbStatus = false;
         else
             lDataSize += lChunkSize;
     }
@@ -165,142 +67,74 @@ bool cOAL_OggStream::Stream(cOAL_Buffer* apDestBuffer)
     return (lDataSize != 0);
 }
 
-//---------------------------------------------------------------------
-
-///////////////////////////////////////////////////////////
-// void Seek(float afWhere)
-//
-///////////////////////////////////////////////////////////
-
-//---------------------------------------------------------------------
-
 void cOAL_OggStream::Seek(float afWhere, bool abForceRebuffer)
 {
     mbEOF = false;
+    if (afWhere < 0.0f)
+    {
+        afWhere = 0.0f;
+    }
+    if (afWhere > 1.0f)
+    {
+        afWhere = 1.0f;
+    }
+    unsigned int Offset = static_cast<unsigned int>(static_cast<float>(mlSamples)*afWhere);
 
-    if (afWhere < 0)
-        afWhere = 0;
-    if (afWhere > 1)
-        afWhere = 1;
+    mfActualTime = static_cast<float>(Offset) / static_cast<float>(mlFrequency);
+    stb_vorbis_seek(STBFile, Offset);
 
-    afWhere = afWhere * mlSamples;
-
-    // Move the pointer to the desired offset
-    ov_pcm_seek_page_lap(&movStreamHandle, (long int)afWhere);
     if (abForceRebuffer)
+    {
         mbNeedsRebuffering = true;
+    }
 }
-
-//---------------------------------------------------------------------
 
 double cOAL_OggStream::GetTime()
 {
-    return ov_time_tell(&movStreamHandle);
+    return mfActualTime;
 }
 
-//---------------------------------------------------------------------
+bool cOAL_OggStream::CreateInternal()
+{
+    if( !STBFile )
+    {
+        return false;
+    }
+    stb_vorbis_info Info = stb_vorbis_get_info( STBFile );
+    if( !Info.channels || Info.channels > 2 )
+    {
+        Destroy();
+        return false;
+    }
+    mlChannels = Info.channels;
+    mFormat = (mlChannels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
+    mlFrequency = Info.sample_rate;
+    mlSamples = stb_vorbis_stream_length_in_samples(STBFile)*Info.channels;
+    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlFrequency);
+    mbStatus = true;
 
-///////////////////////////////////////////////////////////
-//
-//
-///////////////////////////////////////////////////////////
-
-//---------------------------------------------------------------------
+    return mbStatus;
+}
 
 bool cOAL_OggStream::CreateFromFile(const std::wstring& asFilename)
 {
-    DEF_FUNC_NAME("cOAL_OggStream::CreateFromFile()");
-
-    if (mbStatus == false)
-        return false;
-
-    int lOpenResult;
-    FILE* pStreamFile = OpenFileW(asFilename, L"rb");
-
-    if (pStreamFile == nullptr)
-        return false;
-
     msFilename = asFilename;
-
-    // If not an Ogg file, set status and exit
-
-    lOpenResult = ov_open_callbacks(pStreamFile, &movStreamHandle,
-                                    nullptr, 0, OV_CALLBACKS_DEFAULT);
-    if (lOpenResult < 0)
-    {
-        fclose(pStreamFile);
-        mbIsValidHandle = false;
-        mbStatus = false;
-        return false;
-    }
-    mbIsValidHandle = true;
-
-    // Get file info
-    vorbis_info* viFileInfo = ov_info(&movStreamHandle, -1);
-
-    mlChannels = viFileInfo->channels;
-    mlFrequency = viFileInfo->rate;
-    mlSamples = (long)ov_pcm_total(&movStreamHandle, -1);
-    mFormat = (mlChannels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
-
-    mfTotalTime = ov_time_total(&movStreamHandle, -1);
-
-    return true;
+    std::string FileName = WString2String(msFilename);
+    STBFile = stb_vorbis_open_filename(FileName.c_str(), nullptr, nullptr);
+    return CreateInternal();
 }
-
-//---------------------------------------------------------------------
 
 bool cOAL_OggStream::CreateFromBuffer(const void* apBuffer, size_t aSize)
 {
-    DEF_FUNC_NAME("cOAL_OggStream::CreateFromBuffer()");
-
-    if (mbStatus == false)
-        return false;
-
-    if (apBuffer == nullptr)
-        return false;
-
-    // If not an Ogg file, set status and exit
-    tMemoryReader* pBufferStream = new tMemoryReader(apBuffer, aSize);
-
-    int lOpenResult = ov_open_callbacks(pBufferStream, &movStreamHandle,
-                                        nullptr, 0, OV_MEMORY_CALLBACKS);
-    if (lOpenResult < 0)
-    {
-        delete pBufferStream;
-        mbIsValidHandle = false;
-        mbStatus = false;
-        return false;
-    }
-    mbIsValidHandle = true;
-
-    // Get file info
-    vorbis_info* viFileInfo = ov_info(&movStreamHandle, -1);
-
-    mlChannels = viFileInfo->channels;
-    mlFrequency = viFileInfo->rate;
-    mlSamples = (long)ov_pcm_total(&movStreamHandle, -1);
-    mFormat = (mlChannels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
-
-    mfTotalTime = ov_time_total(&movStreamHandle, -1);
-
-    return true;
+    STBFile = stb_vorbis_open_memory(static_cast<const unsigned char*>(apBuffer), aSize, nullptr, nullptr);
+    return CreateInternal();
 }
-
-//---------------------------------------------------------------------
-
-///////////////////////////////////////////////////////////
-//
-//
-///////////////////////////////////////////////////////////
-
-//---------------------------------------------------------------------
 
 void cOAL_OggStream::Destroy()
 {
-    DEF_FUNC_NAME("cOAL_OggStream::Unload()");
-
-    // If we loaded a stream, clear the handle to the Ogg Vorbis file
-    if (mbIsValidHandle)
-        ov_clear(&movStreamHandle);
+    if (STBFile)
+    {
+        stb_vorbis_close(STBFile);
+        STBFile = nullptr;
+    }
 }

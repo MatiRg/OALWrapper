@@ -101,10 +101,10 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 	set(INC_BASE ${INC_BASE} ${WIN_PATH_LIBS}/include ThirdParty)
 	
 	if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-		set(LIBS SDL2main SDL2 OpenAL32 ogg vorbis vorbisenc vorbisfile)
+		set(LIBS SDL2main SDL2 OpenAL32)
 		set(LIBS_DBG ${LIBS})
 	elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-		set(LIBS SDL2main SDL2.dll OpenAL32.dll ogg vorbis vorbisenc vorbisfile)
+		set(LIBS SDL2main SDL2.dll OpenAL32.dll)
 		set(LIBS_DBG ${LIBS})
 	endif()
 	

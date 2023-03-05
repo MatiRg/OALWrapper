@@ -110,7 +110,8 @@ bool cOAL_WAVSample::CreateInternal(SDL_RWops* RWops)
 
 bool cOAL_WAVSample::CreateFromFile(const std::wstring& asFilename)
 {
-    std::string FileName = WString2String(asFilename);
+    msFilename = asFilename;
+    std::string FileName = WString2String(msFilename);
     return CreateInternal(SDL_RWFromFile(FileName.c_str(), "rb"));
 }
 

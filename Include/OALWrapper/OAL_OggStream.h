@@ -15,7 +15,8 @@
 #pragma once
 #include "OAL_Helper.h"
 #include "OAL_Stream.h"
-#include <vorbis/vorbisfile.h>
+
+struct stb_vorbis;
 
 class cOAL_OggStream : public cOAL_Stream
 {
@@ -33,7 +34,8 @@ protected:
     bool Stream(cOAL_Buffer* apDestBuffer);
     double GetTime();
 
-    OggVorbis_File movStreamHandle;
-    int mlCurrent_section;
-    bool mbIsValidHandle;
+    bool CreateInternal();
+protected:
+    stb_vorbis* STBFile = nullptr;
+    float mfActualTime = 0.0f;
 };
