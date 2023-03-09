@@ -47,7 +47,7 @@ bool cOAL_OggStream::Stream(cOAL_Buffer* apDestBuffer)
         );
 
         lSamples *= mlChannels;
-        mfActualTime += (static_cast<float>(lSamples) / static_cast<float>(mlFrequency));
+        mfActualTime += (static_cast<float>(lSamples) / static_cast<float>(mlChannels) / static_cast<float>(mlFrequency));
         const long lChunkSize = lSamples*GetBytesPerSample();
 
         // If we get a 0, then we are at the end of the file
@@ -78,10 +78,11 @@ void cOAL_OggStream::Seek(float afWhere, bool abForceRebuffer)
     {
         afWhere = 1.0f;
     }
-    unsigned int Offset = static_cast<unsigned int>(static_cast<float>(mlSamples)*afWhere);
+    afWhere *= mfTotalTime;
 
-    mfActualTime = static_cast<float>(Offset) / static_cast<float>(mlFrequency);
-    stb_vorbis_seek(STBFile, Offset);
+    const int SampleOffset = static_cast<int>(static_cast<float>(mlFrequency)*afWhere);
+    mfActualTime = static_cast<float>(SampleOffset) / static_cast<float>(mlChannels) / static_cast<float>(mlFrequency);
+    stb_vorbis_seek(STBFile, SampleOffset);
 
     if (abForceRebuffer)
     {
@@ -110,7 +111,7 @@ bool cOAL_OggStream::CreateInternal()
     mFormat = (mlChannels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
     mlFrequency = Info.sample_rate;
     mlSamples = stb_vorbis_stream_length_in_samples(STBFile)*Info.channels;
-    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlFrequency);
+    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlChannels) / static_cast<float>(mlFrequency);
     mbStatus = true;
 
     return mbStatus;

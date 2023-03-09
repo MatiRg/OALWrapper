@@ -36,7 +36,7 @@ bool cOAL_OggSample::CreateInternal(stb_vorbis* STBFile)
     mFormat = (mlChannels == 2) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
     mlFrequency = Info.sample_rate;
     mlSamples = stb_vorbis_stream_length_in_samples(STBFile)*Info.channels;
-    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlFrequency);
+    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlChannels) / static_cast<float>(mlFrequency);
 
     std::vector<ALshort> Data(mlSamples);
     stb_vorbis_get_samples_short_interleaved(STBFile, Info.channels, Data.data(), mlSamples);

@@ -99,7 +99,7 @@ bool cOAL_WAVSample::CreateInternal(SDL_RWops* RWops)
         return false;
     }
     mlFrequency = AudioSpec.freq;
-    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlFrequency);
+    mfTotalTime = static_cast<float>(mlSamples) / static_cast<float>(mlChannels) / static_cast<float>(mlFrequency);
 
     cOAL_Buffer* pBuffer = mvBuffers[0];
     mbStatus = pBuffer->Feed(pData, Length);
